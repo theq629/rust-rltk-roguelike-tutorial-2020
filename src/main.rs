@@ -27,7 +27,7 @@ impl GameState for State {
         self.run_systems();
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
-        let map = self.ecs.fetch::<Vec<TileType>>();
+        let map = self.ecs.fetch::<Map>();
         draw_map(&map, ctx);
         for (pos, render) in (&positions, &renderables).join() {
             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
@@ -35,10 +35,10 @@ impl GameState for State {
     }
 }
 
-fn draw_map(map: &[TileType], ctx: &mut Rltk) {
+fn draw_map(map: &Map, ctx: &mut Rltk) {
     let mut y = 0;
     let mut x = 0;
-    for tile in map.iter() {
+    for tile in map.tiles.iter() {
         match tile {
             TileType::Floor => {
                 ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
@@ -48,7 +48,7 @@ fn draw_map(map: &[TileType], ctx: &mut Rltk) {
             }
         }
         x += 1;
-        if x > 79 {
+        if x >= map.width {
             x = 0;
             y += 1;
         }
@@ -67,9 +67,9 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
 
-    let (rooms, map) = new_map_room_and_corridors();
+    let map = Map::new_map_room_and_corridors();
+    let (player_x, player_y) = map.rooms[0].centre();
     gs.ecs.insert(map);
-    let (player_x, player_y) = rooms[0].centre();
 
     gs.ecs
         .create_entity()
