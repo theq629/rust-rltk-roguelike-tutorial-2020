@@ -1,4 +1,4 @@
-use rltk::{Rltk, GameState, RGB};
+use rltk::{Rltk, GameState, RGB, Point};
 use specs::prelude::*;
 
 mod components;
@@ -11,15 +11,25 @@ mod rect;
 pub use rect::*;
 mod visibility_system;
 pub use visibility_system::VisibilitySystem;
+mod monster_ai_system;
+pub use monster_ai_system::MonsterAI;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    Paused, Running
+}
 
 pub struct State {
-    ecs: World
+    ecs: World,
+    runstate: RunState
 }
 
 impl State {
     fn run_systems(&mut self) {
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -27,8 +37,12 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
-        player_input(self, ctx);
-        self.run_systems();
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused;
+        } else {
+            self.runstate = player_input(self, ctx)
+        }
         draw_map(&self.ecs, ctx);
         draw_entities(&self.ecs, ctx);
     }
@@ -84,6 +98,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Renderable>();
     ecs.register::<Player>();
     ecs.register::<Viewshed>();
+    ecs.register::<Monster>();
+    ecs.register::<Name>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
@@ -99,14 +115,23 @@ fn setup_world(ecs: &mut World, map : &Map) {
         })
         .with(Player{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+        .with(Name{ name: "Player".to_string() })
         .build();
+    ecs.insert(Point::new(player_x, player_y));
 
-    for room in map.rooms.iter().skip(1) {
+    for (i, room) in map.rooms.iter().skip(1).enumerate() {
         let (x, y) = room.centre();
         let glyph : rltk::FontCharType;
+        let name : String;
         match rng.roll_dice(1, 2) {
-            1 => { glyph = rltk::to_cp437('g') }
-            _ => { glyph = rltk::to_cp437('o') }
+            1 => {
+                glyph = rltk::to_cp437('g');
+                name = "Goblin".to_string();
+            }
+            _ => {
+                glyph = rltk::to_cp437('o');
+                name = "Orc".to_string();
+            }
         }
         ecs.create_entity()
             .with(Position{ x, y })
@@ -116,6 +141,8 @@ fn setup_world(ecs: &mut World, map : &Map) {
                 bg: RGB::named(rltk::BLACK),
             })
             .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+            .with(Monster{})
+            .with(Name{ name: format!("{} #{}", &name, i) })
             .build();
     }
 }
@@ -126,7 +153,8 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
     let mut gs = State {
-        ecs: World::new()
+        ecs: World::new(),
+        runstate: RunState::Running
     };
     setup_ecs(&mut gs.ecs);
     let map = Map::new_map_room_and_corridors();
