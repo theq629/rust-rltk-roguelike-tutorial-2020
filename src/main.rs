@@ -105,6 +105,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Monster>();
     ecs.register::<Name>();
     ecs.register::<BlocksTile>();
+    ecs.register::<CombatStats>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
@@ -121,6 +122,7 @@ fn setup_world(ecs: &mut World, map : &Map) {
         .with(Player{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(Name{ name: "Player".to_string() })
+        .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
         .build();
     ecs.insert(Point::new(player_x, player_y));
 
@@ -149,6 +151,7 @@ fn setup_world(ecs: &mut World, map : &Map) {
             .with(Monster{})
             .with(Name{ name: format!("{} #{}", &name, i) })
             .with(BlocksTile{})
+            .with(CombatStats{ max_hp: 16, hp: 16, defence: 1, power: 4 })
             .build();
     }
 }
