@@ -15,6 +15,10 @@ mod monster_ai_system;
 pub use monster_ai_system::MonsterAI;
 mod map_indexing_system;
 pub use map_indexing_system::MapIndexingSystem;
+mod melee_combat_system;
+pub use melee_combat_system::MeleeCombatSystem;
+mod damage_system;
+pub use damage_system::DamageSystem;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -34,6 +38,10 @@ impl State {
         mob.run_now(&self.ecs);
         let mut mapindex = MapIndexingSystem{};
         mapindex.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -43,6 +51,7 @@ impl GameState for State {
         ctx.cls();
         if self.runstate == RunState::Running {
             self.run_systems();
+            damage_system::delete_the_dead(&mut self.ecs);
             self.runstate = RunState::Paused;
         } else {
             self.runstate = player_input(self, ctx)
@@ -106,13 +115,15 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Name>();
     ecs.register::<BlocksTile>();
     ecs.register::<CombatStats>();
+    ecs.register::<WantsToMelee>();
+    ecs.register::<SufferDamage>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
     let mut rng = rltk::RandomNumberGenerator::new();
 
     let (player_x, player_y) = map.rooms[0].centre();
-    ecs.create_entity()
+    let player_entity = ecs.create_entity()
         .with(Position { x: player_x, y: player_y })
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
@@ -125,6 +136,7 @@ fn setup_world(ecs: &mut World, map : &Map) {
         .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
         .build();
     ecs.insert(Point::new(player_x, player_y));
+    ecs.insert(player_entity);
 
     for (i, room) in map.rooms.iter().skip(1).enumerate() {
         let (x, y) = room.centre();
