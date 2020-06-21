@@ -19,6 +19,7 @@ mod melee_combat_system;
 pub use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 pub use damage_system::DamageSystem;
+mod gui;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -82,6 +83,7 @@ impl GameState for State {
 
         draw_map(&self.ecs, ctx);
         draw_entities(&self.ecs, ctx);
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 
