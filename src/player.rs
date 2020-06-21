@@ -42,6 +42,8 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             VirtualKeyCode::Numpad2 |
             VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
 
+            VirtualKeyCode::Period => {}
+
             _ => { return RunState::Paused }
         },
     }
