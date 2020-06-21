@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{State, TileType, Position, Player, Viewshed, Map, RunState}; 
+use super::{State, Position, Player, Viewshed, Map, RunState}; 
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -11,7 +11,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 
     for (_player, pos, viewshed) in (&mut players, &mut positions, &mut viewsheds).join() {
         let dest_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
-        if map.tiles[dest_idx] != TileType::Wall {
+        if !map.blocked[dest_idx] {
             pos.x = min(map.width - 1, max(0, pos.x + delta_x));
             pos.y = min(map.height - 1, max(0, pos.y + delta_y));
             let mut ppos = ecs.write_resource::<Point>();
