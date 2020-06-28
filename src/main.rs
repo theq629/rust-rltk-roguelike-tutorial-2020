@@ -21,6 +21,7 @@ mod damage_system;
 pub use damage_system::DamageSystem;
 mod gui;
 mod gamelog;
+mod spawner;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -146,50 +147,15 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<SufferDamage>();
 }
 
-fn setup_world(ecs: &mut World, map : &Map, rng: &mut rltk::RandomNumberGenerator) {
+fn setup_world(ecs: &mut World, map : &Map) {
     let (player_x, player_y) = map.rooms[0].centre();
-    let player_entity = ecs.create_entity()
-        .with(Position { x: player_x, y: player_y })
-        .with(Renderable {
-            glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(Player{})
-        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
-        .with(Name{ name: "Player".to_string() })
-        .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
-        .build();
+    let player_entity = spawner::player(ecs, player_x, player_y);
     ecs.insert(Point::new(player_x, player_y));
     ecs.insert(player_entity);
 
-    for (i, room) in map.rooms.iter().skip(1).enumerate() {
+    for room in map.rooms.iter().skip(1) {
         let (x, y) = room.centre();
-        let glyph : rltk::FontCharType;
-        let name : String;
-        match rng.roll_dice(1, 2) {
-            1 => {
-                glyph = rltk::to_cp437('g');
-                name = "Goblin".to_string();
-            }
-            _ => {
-                glyph = rltk::to_cp437('o');
-                name = "Orc".to_string();
-            }
-        }
-        ecs.create_entity()
-            .with(Position{ x, y })
-            .with(Renderable{
-                glyph: glyph,
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
-            .with(Monster{})
-            .with(Name{ name: format!("{} #{}", &name, i) })
-            .with(BlocksTile{})
-            .with(CombatStats{ max_hp: 16, hp: 16, defence: 1, power: 4 })
-            .build();
+        spawner::random_monster(ecs, x, y);
     }
 }
 
@@ -204,12 +170,12 @@ fn main() -> rltk::BError {
     setup_ecs(&mut gs.ecs);
     let mut rng = rltk::RandomNumberGenerator::new();
     let map = Map::new_map_room_and_corridors(&mut rng);
-    setup_world(&mut gs.ecs, &map, &mut rng);
     gs.ecs.insert(rng);
-    gs.ecs.insert(map);
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(gamelog::GameLog{
         entries: vec!["Welcome to Rusty Roguelike".to_string()]
     });
+    setup_world(&mut gs.ecs, &map);
+    gs.ecs.insert(map);
     rltk::main_loop(context, gs)
 }
