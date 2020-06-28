@@ -69,7 +69,6 @@ impl GameState for State {
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
-                self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
@@ -77,12 +76,10 @@ impl GameState for State {
             }
             RunState::PlayerTurn => {
                 self.run_systems();
-                self.ecs.maintain();
                 newrunstate = RunState::MonsterTurn;
             }
             RunState::MonsterTurn => {
                 self.run_systems();
-                self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
