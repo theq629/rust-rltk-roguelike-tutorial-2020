@@ -19,6 +19,8 @@ mod melee_combat_system;
 pub use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 pub use damage_system::DamageSystem;
+mod inventory_system;
+pub use inventory_system::ItemCollectionSystem;
 mod gui;
 mod gamelog;
 mod spawner;
@@ -45,6 +47,8 @@ impl State {
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
         self.ecs.maintain();
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
     }
 }
 
@@ -147,6 +151,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<SufferDamage>();
     ecs.register::<Item>();
     ecs.register::<Potion>();
+    ecs.register::<InBackpack>();
+    ecs.register::<WantsToPickupItem>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
