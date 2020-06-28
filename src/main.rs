@@ -146,9 +146,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<SufferDamage>();
 }
 
-fn setup_world(ecs: &mut World, map : &Map) {
-    let mut rng = rltk::RandomNumberGenerator::new();
-
+fn setup_world(ecs: &mut World, map : &Map, rng: &mut rltk::RandomNumberGenerator) {
     let (player_x, player_y) = map.rooms[0].centre();
     let player_entity = ecs.create_entity()
         .with(Position { x: player_x, y: player_y })
@@ -204,8 +202,10 @@ fn main() -> rltk::BError {
         ecs: World::new()
     };
     setup_ecs(&mut gs.ecs);
-    let map = Map::new_map_room_and_corridors();
-    setup_world(&mut gs.ecs, &map);
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let map = Map::new_map_room_and_corridors(&mut rng);
+    setup_world(&mut gs.ecs, &map, &mut rng);
+    gs.ecs.insert(rng);
     gs.ecs.insert(map);
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(gamelog::GameLog{
