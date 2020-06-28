@@ -154,8 +154,7 @@ fn setup_world(ecs: &mut World, map : &Map) {
     ecs.insert(player_entity);
 
     for room in map.rooms.iter().skip(1) {
-        let (x, y) = room.centre();
-        spawner::random_monster(ecs, x, y);
+        spawner::spawn_room(ecs, room);
     }
 }
 
