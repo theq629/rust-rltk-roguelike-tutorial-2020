@@ -145,6 +145,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<CombatStats>();
     ecs.register::<WantsToMelee>();
     ecs.register::<SufferDamage>();
+    ecs.register::<Item>();
+    ecs.register::<Potion>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {

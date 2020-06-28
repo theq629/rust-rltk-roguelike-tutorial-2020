@@ -64,3 +64,11 @@ impl SufferDamage {
         }
     }
 }
+
+#[derive(Component)]
+pub struct Item {}
+
+#[derive(Component)]
+pub struct Potion {
+    pub heal_amount: i32
+}
