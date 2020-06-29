@@ -11,7 +11,6 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
     ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
     draw_stats(ecs, ctx);
     draw_gamelog(ecs, ctx);
-    draw_cursor(ctx);
     draw_tooltips(ecs, ctx);
 }
 
@@ -32,11 +31,6 @@ fn draw_gamelog(ecs: &World, ctx: &mut Rltk) {
         ctx.print(2, y, s);
         y += 1;
     }
-}
-
-fn draw_cursor(ctx: &mut Rltk) {
-    let mouse_pos = ctx.mouse_pos();
-    ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
 }
 
 fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
