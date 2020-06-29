@@ -1,0 +1,11 @@
+set -e
+
+name=rust-rltk-roguelike-tutorial
+dest=target/web
+
+cargo build --release --target wasm32-unknown-unknown
+rm -rf "$dest"
+mkdir -p "$dest"
+wasm-bindgen target/wasm32-unknown-unknown/release/$name.wasm --out-dir "$dest" --no-modules --no-typescript
+cp "web/index.html" "$dest"
+echo "output in $dest" 1>&2
