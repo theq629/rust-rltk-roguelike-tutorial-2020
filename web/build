@@ -8,4 +8,5 @@ rm -rf "$dest"
 mkdir -p "$dest"
 wasm-bindgen target/wasm32-unknown-unknown/release/$name.wasm --out-dir "$dest" --no-modules --no-typescript
 cp "web/index.html" "$dest"
+cp "web/main.css" "$dest"
 echo "output in $dest" 1>&2
