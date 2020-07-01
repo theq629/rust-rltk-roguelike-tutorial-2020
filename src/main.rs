@@ -20,7 +20,7 @@ pub use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 pub use damage_system::DamageSystem;
 mod inventory_system;
-pub use inventory_system::{ItemCollectionSystem, PotionUseSystem, ItemDropSystem};
+pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem};
 mod gui;
 mod gamelog;
 mod spawner;
@@ -48,8 +48,8 @@ impl State {
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
-        let mut potions = PotionUseSystem{};
-        potions.run_now(&self.ecs);
+        let mut item_use = ItemUseSystem{};
+        item_use.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem{};
         drop_items.run_now(&self.ecs);
         self.ecs.maintain();
@@ -89,8 +89,8 @@ impl GameState for State {
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
                         let item_entity = result.1.unwrap();
-                        let mut intent = self.ecs.write_storage::<WantsToDrinkPotion>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDrinkPotion{ potion: item_entity }).expect("Unable to insert intent");
+                        let mut intent = self.ecs.write_storage::<WantsToUseItem>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity }).expect("Unable to insert intent");
                         newrunstate = RunState::PlayerTurn;
                     }
                 }
@@ -183,11 +183,12 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToMelee>();
     ecs.register::<SufferDamage>();
     ecs.register::<Item>();
-    ecs.register::<Potion>();
+    ecs.register::<ProvidesHealing>();
     ecs.register::<InBackpack>();
     ecs.register::<WantsToPickupItem>();
-    ecs.register::<WantsToDrinkPotion>();
+    ecs.register::<WantsToUseItem>();
     ecs.register::<WantsToDropItem>();
+    ecs.register::<Consumable>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
