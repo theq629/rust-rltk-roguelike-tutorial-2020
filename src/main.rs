@@ -189,6 +189,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToUseItem>();
     ecs.register::<WantsToDropItem>();
     ecs.register::<Consumable>();
+    ecs.register::<Ranged>();
+    ecs.register::<InflictsDamage>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
