@@ -111,14 +111,14 @@ pub fn random_item(ecs: &mut World, x: i32, y: i32) {
 }
 
 fn orc(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('o'), "Orc");
+    monster(ecs, x, y, rltk::to_cp437('o'), "Orc", 16, 1, 4);
 }
 
 fn goblin(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('g'), "Goblin");
+    monster(ecs, x, y, rltk::to_cp437('g'), "Goblin", 8, 1, 3);
 }
 
-fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: S) {
+fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: S, max_hp: i32, defence: i32, power: i32) {
     ecs.create_entity()
         .with(Position{ x, y })
         .with(Renderable{
@@ -131,7 +131,7 @@ fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharT
         .with(Monster{})
         .with(Name{ name: name.to_string() })
         .with(BlocksTile{})
-        .with(CombatStats{ max_hp: 16, hp: 16, defence: 1, power: 4 })
+        .with(CombatStats{ max_hp: max_hp, hp: max_hp, defence: defence, power: power })
         .build();
 }
 
