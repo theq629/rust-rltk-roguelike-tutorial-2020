@@ -171,16 +171,16 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
         if idx.x == mouse_pos.0 && idx.y == mouse_pos.1 {
             valid_target = true;
         }
-        if valid_target {
-            ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
-            if ctx.left_click {
-                return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0, mouse_pos.1)));
-            }
-        } else {
-            ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::RED));
-            if ctx.left_click {
-                return (ItemMenuResult::Cancel, None);
-            }
+    }
+    if valid_target {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
+        if ctx.left_click {
+            return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0, mouse_pos.1)));
+        }
+    } else {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::RED));
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
         }
     }
 
