@@ -73,6 +73,19 @@ pub fn spawn_room(ecs: &mut World, room: &Rect) {
     }
 }
 
+pub fn spawn_start_room(ecs: &mut World, room: &Rect) {
+    let (x0, y0, x1, y1) = {
+        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
+        let x0 = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+        let y0 = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+        let x1 = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+        let y1 = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+        (x0, y0, x1, y1)
+    };
+    health_potion(ecs, x0 as i32, y0 as i32);
+    magic_missile_scroll(ecs, x1 as i32, y1 as i32);
+}
+
 pub fn random_monster(ecs: &mut World, x: i32, y: i32) {
     let roll: i32;
     {
