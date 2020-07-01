@@ -108,3 +108,8 @@ pub struct Ranged {
 pub struct InflictsDamage {
     pub damage: i32
 }
+
+#[derive(Component)]
+pub struct AreaOfEffect {
+    pub radius: i32
+}

@@ -209,6 +209,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Consumable>();
     ecs.register::<Ranged>();
     ecs.register::<InflictsDamage>();
+    ecs.register::<AreaOfEffect>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {

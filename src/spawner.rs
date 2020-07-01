@@ -2,7 +2,7 @@ use rltk::{RGB, RandomNumberGenerator};
 use specs::prelude::*;
 use super::map::{MAPWIDTH};
 use super::rect::{Rect};
-use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage};
+use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect};
 
 const MAX_MONSTERS: i32 = 4;
 const MAX_ITEMS: i32 = 2;
@@ -74,16 +74,19 @@ pub fn spawn_room(ecs: &mut World, room: &Rect) {
 }
 
 pub fn spawn_start_room(ecs: &mut World, room: &Rect) {
-    let (x0, y0, x1, y1) = {
+    let (x0, y0, x1, y1, x2, y2) = {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
         let x0 = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
         let y0 = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
         let x1 = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
         let y1 = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
-        (x0, y0, x1, y1)
+        let x2 = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+        let y2 = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+        (x0, y0, x1, y1, x2, y2)
     };
     health_potion(ecs, x0 as i32, y0 as i32);
     magic_missile_scroll(ecs, x1 as i32, y1 as i32);
+    fireball_scroll(ecs, x2 as i32, y2 as i32);
 }
 
 pub fn random_monster(ecs: &mut World, x: i32, y: i32) {
@@ -102,10 +105,11 @@ pub fn random_item(ecs: &mut World, x: i32, y: i32) {
     let roll: i32;
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        roll = rng.roll_dice(1, 2);
+        roll = rng.roll_dice(1, 3);
     }
     match roll {
         1 => { health_potion(ecs, x, y) }
+        2 => { fireball_scroll(ecs, x, y) }
         _ => { magic_missile_scroll(ecs, x, y) }
     }
 }
@@ -165,5 +169,23 @@ fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
+        .build();
+}
+
+fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437(')'),
+            fg: RGB::named(rltk::ORANGE),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name: "Fireball Scroll".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(InflictsDamage{ damage: 8 })
+        .with(AreaOfEffect{ radius: 3 })
         .build();
 }
