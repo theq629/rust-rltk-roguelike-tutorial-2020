@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect};
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion};
 
 pub struct ItemCollectionSystem {}
 
@@ -41,10 +41,11 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, InflictsDamage>,
                        ReadStorage<'a, AreaOfEffect>,
                        WriteStorage<'a, CombatStats>,
-                       WriteStorage<'a, SufferDamage>);
+                       WriteStorage<'a, SufferDamage>,
+                       WriteStorage<'a, Confusion>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage) = data;
+        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             let mut targets: Vec<Entity> = Vec::new();
@@ -100,6 +101,26 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
                     }
                 }
+            }
+            let mut add_confusion = Vec::new();
+            {
+                let causes_confusion = confused.get(useitem.item);
+                match causes_confusion {
+                    None => {}
+                    Some(confusion) => {
+                        for mob in targets.iter() {
+                            add_confusion.push((*mob, confusion.turns));
+                            if entity == *player_entity {
+                                let mob_name = names.get(*mob).unwrap();
+                                let item_name = names.get(useitem.item).unwrap();
+                                gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                            }
+                        }
+                    }
+                }
+            }
+            for mob in add_confusion.iter() {
+                confused.insert(mob.0, Confusion{ turns: mob.1 }).expect("Unable to insert status");
             }
             let consumable = consumables.get(useitem.item);
             match consumable {

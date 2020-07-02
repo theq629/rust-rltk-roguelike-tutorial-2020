@@ -210,6 +210,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Ranged>();
     ecs.register::<InflictsDamage>();
     ecs.register::<AreaOfEffect>();
+    ecs.register::<Confusion>();
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
