@@ -27,7 +27,14 @@ mod spawner;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
-    AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory, ShowDropItem, ShowTargeting { range: i32, item: Entity }
+    AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
+    ShowTargeting { range: i32, item: Entity },
+    MainMenu { menu_selection: gui::MainMenuSelection }
 }
 
 pub struct State {
@@ -126,6 +133,19 @@ impl GameState for State {
                     }
                 }
             }
+            RunState::MainMenu{..} => {
+                let result = gui::main_menu(self, ctx);
+                match result {
+                    gui::MainMenuResult::NoSelection{ selected } => newrunstate = RunState::MainMenu{ menu_selection: selected },
+                    gui::MainMenuResult::Selected{ selected } => {
+                        match selected {
+                            gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
+                        }
+                    }
+                }
+            }
         }
 
         {
@@ -135,9 +155,14 @@ impl GameState for State {
 
         damage_system::delete_the_dead(&mut self.ecs);
 
-        draw_map(&self.ecs, ctx);
-        draw_entities(&self.ecs, ctx);
-        gui::draw_ui(&self.ecs, ctx);
+        match newrunstate {
+            RunState::MainMenu{..} => {}
+            _ => {
+                draw_map(&self.ecs, ctx);
+                draw_entities(&self.ecs, ctx);
+                gui::draw_ui(&self.ecs, ctx);
+            }
+        }
     }
 }
 
@@ -237,7 +262,7 @@ fn main() -> rltk::BError {
     let mut rng = rltk::RandomNumberGenerator::new();
     let map = Map::new_map_room_and_corridors(&mut rng);
     gs.ecs.insert(rng);
-    gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
     gs.ecs.insert(gamelog::GameLog{
         entries: vec!["Welcome to Rusty Roguelike".to_string()]
     });
