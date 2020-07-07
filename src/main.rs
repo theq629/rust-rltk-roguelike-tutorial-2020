@@ -1,5 +1,7 @@
+extern crate serde;
 use rltk::{Rltk, GameState, RGB, Point};
 use specs::prelude::*;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
 mod components;
 pub use components::*;
@@ -24,6 +26,7 @@ pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem};
 mod gui;
 mod gamelog;
 mod spawner;
+mod saveload_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -34,7 +37,8 @@ pub enum RunState {
     ShowInventory,
     ShowDropItem,
     ShowTargeting { range: i32, item: Entity },
-    MainMenu { menu_selection: gui::MainMenuSelection }
+    MainMenu { menu_selection: gui::MainMenuSelection },
+    SaveGame
 }
 
 pub struct State {
@@ -140,11 +144,18 @@ impl GameState for State {
                     gui::MainMenuResult::Selected{ selected } => {
                         match selected {
                             gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
-                            gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::LoadGame => {
+                                saveload_system::load_game(&mut self.ecs);
+                                newrunstate = RunState::AwaitingInput
+                            }
                             gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
                         }
                     }
                 }
+            }
+            RunState::SaveGame => {
+                saveload_system::save_game(&mut self.ecs);
+                newrunstate = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::LoadGame };
             }
         }
 
@@ -236,6 +247,9 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<InflictsDamage>();
     ecs.register::<AreaOfEffect>();
     ecs.register::<Confusion>();
+    ecs.register::<SerializationHelper>();
+    ecs.register::<SimpleMarker<SerializeMe>>();
+    ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }
 
 fn setup_world(ecs: &mut World, map : &Map) {
