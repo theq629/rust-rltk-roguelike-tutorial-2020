@@ -84,6 +84,10 @@ impl Map {
         let stairs_idx = map.xy_idx(stairs_position.0, stairs_position.1);
         map.tiles[stairs_idx] = TileType::DownStairs;
 
+        let stairs_position = map.rooms[0].centre();
+        let stairs_idx = map.xy_idx(stairs_position.0, stairs_position.1);
+        map.tiles[stairs_idx] = TileType::DownStairs;
+
         map
     }
 
