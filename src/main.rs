@@ -100,16 +100,17 @@ impl State {
         }
 
         let worldmap;
+        let current_depth;
         {
             let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            let current_depth = worldmap_resource.depth;
+            current_depth = worldmap_resource.depth;
             *worldmap_resource = Map::new_map_room_and_corridors(current_depth + 1, &mut rng);
             worldmap = worldmap_resource.clone();
         }
 
         for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room);
+            spawner::spawn_room(&mut self.ecs, room, current_depth+1);
         }
 
         let (player_x, player_y) = worldmap.rooms[0].centre();
@@ -340,7 +341,7 @@ fn setup_world(ecs: &mut World, map : &Map) {
     ecs.insert(player_entity);
 
     for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(ecs, room);
+        spawner::spawn_room(ecs, room, 1);
     }
 }
 

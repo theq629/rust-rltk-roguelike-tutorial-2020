@@ -26,13 +26,13 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .build()
 }
 
-pub fn spawn_room(ecs: &mut World, room: &Rect) {
+pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
     let spawn_table = room_table();
     let mut spawn_points: HashMap<usize, String> = HashMap::new();
 
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        let num_spans = rng.roll_dice(1, MAX_MONSTERS + 3) - 3;
+        let num_spans = rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3;
 
         for _ in 0 .. num_spans {
             let mut added = false;
