@@ -27,6 +27,7 @@ mod gui;
 mod gamelog;
 mod spawner;
 mod saveload_system;
+mod random_table;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -338,7 +339,6 @@ fn setup_world(ecs: &mut World, map : &Map) {
     ecs.insert(Point::new(player_x, player_y));
     ecs.insert(player_entity);
 
-    spawner::spawn_start_room(ecs, &map.rooms[0]);
     for room in map.rooms.iter().skip(1) {
         spawner::spawn_room(ecs, room);
     }
