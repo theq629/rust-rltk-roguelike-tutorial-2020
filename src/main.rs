@@ -73,6 +73,7 @@ impl State {
         let player = self.ecs.read_storage::<Player>();
         let backpack = self.ecs.read_storage::<InBackpack>();
         let player_entity = self.ecs.fetch::<Entity>();
+        let equipped = self.ecs.read_storage::<Equipped>();
 
         let mut to_delete: Vec<Entity> = Vec::new();
         for entity in entities.join() {
@@ -83,6 +84,11 @@ impl State {
             if let Some(bp) = backpack.get(entity) {
                 if bp.owner == *player_entity {
                     should_delete = false;
+                }
+            }
+            if let Some(eq) = equipped.get(entity) {
+                if eq.owner == *player_entity {
+                    should_delete = true;
                 }
             }
             if should_delete {
@@ -329,6 +335,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<InflictsDamage>();
     ecs.register::<AreaOfEffect>();
     ecs.register::<Confusion>();
+    ecs.register::<Equippable>();
+    ecs.register::<Equipped>();
     ecs.register::<SerializationHelper>();
     ecs.register::<SimpleMarker<SerializeMe>>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());

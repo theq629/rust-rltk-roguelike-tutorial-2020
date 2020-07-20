@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion};
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped};
 
 pub struct ItemCollectionSystem {}
 
@@ -42,10 +42,13 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, AreaOfEffect>,
                        WriteStorage<'a, CombatStats>,
                        WriteStorage<'a, SufferDamage>,
-                       WriteStorage<'a, Confusion>);
+                       WriteStorage<'a, Confusion>,
+                       ReadStorage<'a, Equippable>,
+                       WriteStorage<'a, Equipped>,
+                       WriteStorage<'a, InBackpack>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused) = data;
+        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             let mut targets: Vec<Entity> = Vec::new();
@@ -73,6 +76,36 @@ impl<'a> System<'a> for ItemUseSystem {
                     }
                 }
             }
+
+            let item_equippable = equippable.get(useitem.item);
+            match item_equippable {
+                None => {}
+                Some(can_equip) => {
+                    let target_slot = can_equip.slot;
+                    let target = targets[0];
+
+                    let mut to_unequip: Vec<Entity> = Vec::new();
+                    for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
+                        if already_equipped.owner == target && already_equipped.slot == target_slot {
+                            to_unequip.push(item_entity);
+                            if target == *player_entity {
+                                gamelog.entries.push(format!("You unequip {}.", name.name));
+                            }
+                        }
+                    }
+                    for item in to_unequip.iter() {
+                        equipped.remove(*item);
+                        backpack.insert(*item, InBackpack{ owner: target }).expect("Unable to insert backpack entry");
+                    }
+
+                    equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
+                    backpack.remove(useitem.item);
+                    if target == *player_entity {
+                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                    }
+                }
+            }
+
             let healing_provider = healing_providers.get(useitem.item);
             match healing_provider {
                 None => {}
@@ -88,6 +121,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     }
                 }
             }
+
             let item_damages = inflict_damage.get(useitem.item);
             match item_damages {
                 None => {}
@@ -102,6 +136,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     }
                 }
             }
+
             let mut add_confusion = Vec::new();
             {
                 let causes_confusion = confused.get(useitem.item);
@@ -122,6 +157,7 @@ impl<'a> System<'a> for ItemUseSystem {
             for mob in add_confusion.iter() {
                 confused.insert(mob.0, Confusion{ turns: mob.1 }).expect("Unable to insert status");
             }
+
             let consumable = consumables.get(useitem.item);
             match consumable {
                 None => {}
