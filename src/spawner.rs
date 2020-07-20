@@ -4,7 +4,7 @@ use specs::saveload::{SimpleMarker, MarkedBuilder};
 use std::collections::HashMap;
 use super::map::{MAPWIDTH};
 use super::rect::{Rect};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, random_table::RandomTable, EquipmentSlot, Equippable};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, random_table::RandomTable, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus};
 
 const MAX_MONSTERS: i32 = 4;
 
@@ -191,6 +191,7 @@ fn dagger(ecs: &mut World, x: i32, y: i32) {
         .with(Name{ name: "Dagger".to_string() })
         .with(Item{})
         .with(Equippable{ slot: EquipmentSlot::Melee })
+        .with(MeleePowerBonus{ power: 2 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -207,6 +208,7 @@ fn shield(ecs: &mut World, x: i32, y: i32) {
         .with(Name{ name: "Shield".to_string() })
         .with(Item{})
         .with(Equippable{ slot: EquipmentSlot::Shield })
+        .with(DefenceBonus{ defence: 1 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

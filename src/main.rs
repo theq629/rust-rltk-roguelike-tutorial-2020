@@ -337,6 +337,8 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<Confusion>();
     ecs.register::<Equippable>();
     ecs.register::<Equipped>();
+    ecs.register::<MeleePowerBonus>();
+    ecs.register::<DefenceBonus>();
     ecs.register::<SerializationHelper>();
     ecs.register::<SimpleMarker<SerializeMe>>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
