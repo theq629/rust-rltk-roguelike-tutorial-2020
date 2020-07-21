@@ -99,6 +99,11 @@ pub struct WantsToDropItem {
     pub item: Entity
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct WantsToRemoveItem {
+    pub item: Entity
+}
+
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Consumable {}
 

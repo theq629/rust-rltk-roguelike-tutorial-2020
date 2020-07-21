@@ -22,7 +22,7 @@ pub use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 pub use damage_system::DamageSystem;
 mod inventory_system;
-pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem};
+pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem};
 mod gui;
 mod gamelog;
 mod spawner;
@@ -38,6 +38,7 @@ pub enum RunState {
     ShowInventory,
     ShowDropItem,
     ShowTargeting { range: i32, item: Entity },
+    ShowRemoveItem,
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
     NextLevel
@@ -65,6 +66,8 @@ impl State {
         item_use.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem{};
         drop_items.run_now(&self.ecs);
+        let mut item_remove = ItemRemoveSystem{};
+        item_remove.run_now(&self.ecs);
         self.ecs.maintain();
     }
 
@@ -216,6 +219,19 @@ impl GameState for State {
                     }
                 }
             }
+            RunState::ShowRemoveItem => {
+                let result = gui::remove_item_menu(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
+                    }
+                }
+            }
             RunState::MainMenu{..} => {
                 let result = gui::main_menu(self, ctx);
                 match result {
@@ -330,6 +346,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToPickupItem>();
     ecs.register::<WantsToUseItem>();
     ecs.register::<WantsToDropItem>();
+    ecs.register::<WantsToRemoveItem>();
     ecs.register::<Consumable>();
     ecs.register::<Ranged>();
     ecs.register::<InflictsDamage>();

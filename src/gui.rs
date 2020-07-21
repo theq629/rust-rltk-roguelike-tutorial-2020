@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, Viewshed, RunState};
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, Viewshed, RunState, Equipped};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -106,20 +106,26 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
 }
 
 pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
-    inventory_menu(gs, ctx, "Inventory".to_string())
+    let player_entity = gs.ecs.fetch::<Entity>();
+    inventory_menu::<InBackpack>(gs, ctx, "Inventory".to_string(), &|item: &InBackpack| item.owner == *player_entity)
 }
 
 pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
-    inventory_menu(gs, ctx, "Drop Which Item?".to_string())
+    let player_entity = gs.ecs.fetch::<Entity>();
+    inventory_menu::<InBackpack>(gs, ctx, "Drop Which Item?".to_string(), &|item: &InBackpack| item.owner == *player_entity)
 }
 
-fn inventory_menu(gs: &mut State, ctx: &mut Rltk, title: String) -> (ItemMenuResult, Option<Entity>) {
+pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     let player_entity = gs.ecs.fetch::<Entity>();
+    inventory_menu::<Equipped>(gs, ctx, "Remove Which Item?".to_string(), &|item: &Equipped| item.owner == *player_entity)
+}
+
+fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, filter: &dyn Fn(&C) -> bool) -> (ItemMenuResult, Option<Entity>) {
     let names = gs.ecs.read_storage::<Name>();
-    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let backpack = gs.ecs.read_storage::<C>();
     let entities = gs.ecs.entities();
 
-    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity);
+    let inventory = (&backpack, &names).join().filter(|item| filter(item.0));
     let count = inventory.count();
 
     let mut y = (25 - (count / 2)) as i32;
@@ -129,7 +135,7 @@ fn inventory_menu(gs: &mut State, ctx: &mut Rltk, title: String) -> (ItemMenuRes
 
     let mut equippable: Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity) {
+    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| filter(item.1)) {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as rltk::FontCharType);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
