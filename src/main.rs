@@ -41,7 +41,8 @@ pub enum RunState {
     ShowRemoveItem,
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
-    NextLevel
+    NextLevel,
+    GameOver
 }
 
 pub struct State {
@@ -100,6 +101,47 @@ impl State {
         }
 
         to_delete
+    }
+
+    fn game_over_cleanup(&mut self) {
+        let mut to_delete = Vec::new();
+        for e in self.ecs.entities().join() {
+            to_delete.push(e);
+        }
+        for del in to_delete.iter() {
+            self.ecs.delete_entity(*del).expect("Deletion failed");
+        }
+
+        let worldmap;
+        {
+            let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
+            let mut worldmap_resource = self.ecs.write_resource::<Map>();
+            *worldmap_resource = Map::new_map_room_and_corridors(1, &mut rng);
+            worldmap = worldmap_resource.clone();
+        }
+
+        for room in worldmap.rooms.iter().skip(1) {
+            spawner::spawn_room(&mut self.ecs, room, 1);
+        }
+
+        let (player_x, player_y) = worldmap.rooms[0].centre();
+        let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
+        let mut player_position = self.ecs.write_resource::<Point>();
+        *player_position = Point::new(player_x, player_y);
+        let mut position_components = self.ecs.write_storage::<Position>();
+        let mut player_entity_writer = self.ecs.write_resource::<Entity>();
+        *player_entity_writer = player_entity;
+        let player_pos_comp = position_components.get_mut(player_entity);
+        if let Some(player_pos_comp) = player_pos_comp {
+            player_pos_comp.x = player_x;
+            player_pos_comp.y = player_y;
+        }
+
+        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
+        let vs = viewshed_components.get_mut(player_entity);
+        if let Some(vs) = vs {
+            vs.dirty = true;
+        }
     }
 
     fn goto_next_level(&mut self) {
@@ -256,6 +298,16 @@ impl GameState for State {
             RunState::NextLevel => {
                 self.goto_next_level();
                 newrunstate = RunState::PreRun;
+            },
+            RunState::GameOver => {
+                let result = gui::game_over(ctx);
+                match result {
+                    gui::GameOverResult::NoSelection => {}
+                    gui::GameOverResult::QuitToMenu => {
+                        self.game_over_cleanup();
+                        newrunstate = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
+                    }
+                }
             }
         }
 
