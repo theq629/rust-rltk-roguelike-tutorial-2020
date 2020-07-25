@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use super::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion};
 
 pub struct MonsterAI {}
 

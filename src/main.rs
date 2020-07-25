@@ -11,23 +11,13 @@ mod player;
 pub use player::*;
 mod rect;
 pub use rect::*;
-mod visibility_system;
-pub use visibility_system::VisibilitySystem;
-mod monster_ai_system;
-pub use monster_ai_system::MonsterAI;
-mod map_indexing_system;
-pub use map_indexing_system::MapIndexingSystem;
-mod melee_combat_system;
-pub use melee_combat_system::MeleeCombatSystem;
-mod damage_system;
-pub use damage_system::DamageSystem;
-mod inventory_system;
-pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem};
 mod gui;
 mod gamelog;
 mod spawner;
 mod saveload_system;
 mod random_table;
+mod systems;
+use systems::damage_system::{delete_the_dead};
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -46,29 +36,13 @@ pub enum RunState {
 }
 
 pub struct State {
-    ecs: World
+    ecs: World,
+    dispatcher: Box<dyn systems::UnifiedDispatcher + 'static>
 }
 
 impl State {
     fn run_systems(&mut self) {
-        let mut vis = VisibilitySystem{};
-        vis.run_now(&self.ecs);
-        let mut mob = MonsterAI{};
-        mob.run_now(&self.ecs);
-        let mut mapindex = MapIndexingSystem{};
-        mapindex.run_now(&self.ecs);
-        let mut melee = MeleeCombatSystem{};
-        melee.run_now(&self.ecs);
-        let mut damage = DamageSystem{};
-        damage.run_now(&self.ecs);
-        let mut pickup = ItemCollectionSystem{};
-        pickup.run_now(&self.ecs);
-        let mut item_use = ItemUseSystem{};
-        item_use.run_now(&self.ecs);
-        let mut drop_items = ItemDropSystem{};
-        drop_items.run_now(&self.ecs);
-        let mut item_remove = ItemRemoveSystem{};
-        item_remove.run_now(&self.ecs);
+        self.dispatcher.run_now(&mut self.ecs);
         self.ecs.maintain();
     }
 
@@ -316,7 +290,7 @@ impl GameState for State {
             *runwriter = newrunstate;
         }
 
-        damage_system::delete_the_dead(&mut self.ecs);
+        delete_the_dead(&mut self.ecs);
 
         match newrunstate {
             RunState::MainMenu{..} => {}
@@ -430,7 +404,8 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
     let mut gs = State {
-        ecs: World::new()
+        ecs: World::new(),
+        dispatcher: systems::build()
     };
     setup_ecs(&mut gs.ecs);
     let mut rng = rltk::RandomNumberGenerator::new();

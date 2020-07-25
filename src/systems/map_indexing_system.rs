@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{Map, Position, BlocksTile};
+use crate::{Map, Position, BlocksTile};
 
 pub struct MapIndexingSystem {}
 

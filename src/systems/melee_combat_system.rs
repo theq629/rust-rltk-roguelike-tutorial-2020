@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped};
+use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped};
 
 pub struct MeleeCombatSystem {}
 
