@@ -176,6 +176,15 @@ impl GameState for State {
         }
 
         match newrunstate {
+            RunState::MainMenu{..} => {}
+            _ => {
+                draw_map(&self.ecs, ctx);
+                draw_entities(&self.ecs, ctx);
+                gui::draw_ui(&self.ecs, ctx);
+            }
+        }
+
+        match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
                 newrunstate = RunState::AwaitingInput;
@@ -291,15 +300,6 @@ impl GameState for State {
         }
 
         delete_the_dead(&mut self.ecs);
-
-        match newrunstate {
-            RunState::MainMenu{..} => {}
-            _ => {
-                draw_map(&self.ecs, ctx);
-                draw_entities(&self.ecs, ctx);
-                gui::draw_ui(&self.ecs, ctx);
-            }
-        }
     }
 }
 
