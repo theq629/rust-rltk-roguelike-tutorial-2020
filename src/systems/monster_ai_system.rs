@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState};
 
 pub struct MonsterAI {}
 
@@ -8,6 +8,7 @@ impl<'a> System<'a> for MonsterAI {
     type SystemData = (WriteExpect<'a, Map>,
                        ReadExpect<'a, Point>,
                        ReadExpect<'a, Entity>,
+                       ReadExpect<'a, RunState>,
                        Entities<'a>,
                        WriteStorage<'a, Viewshed>,
                        WriteStorage<'a, Position>,
@@ -17,7 +18,9 @@ impl<'a> System<'a> for MonsterAI {
                        WriteExpect<'a, ParticleBuilder>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_pos, player_entity, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder) = data;
+
+        if *runstate != RunState::MonsterTurn { return; }
 
         for (entity, mut viewshed, mut pos, _monster) in (&entities, &mut viewshed, &mut pos, &monster).join() {
             let mut can_act = true;
