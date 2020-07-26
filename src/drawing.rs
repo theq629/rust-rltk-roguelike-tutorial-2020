@@ -33,7 +33,7 @@ fn draw_map(ecs: &World, ctx: &mut Rltk) {
                 }
             }
             if map.bloodstains.contains(&idx) {
-                bg = RGB::from_f32(0.75, 0., 0.);
+                bg = RGB::from_f32(0.3, 0., 0.);
             }
             if !map.visible_tiles[idx] {
                 fg = fg.to_greyscale();
