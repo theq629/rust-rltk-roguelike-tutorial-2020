@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped};
+use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder};
 
 pub struct MeleeCombatSystem {}
 
@@ -12,10 +12,12 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        WriteStorage<'a, SufferDamage>,
                        ReadStorage<'a, MeleePowerBonus>,
                        ReadStorage<'a, DefenceBonus>,
-                       ReadStorage<'a, Equipped>);
+                       ReadStorage<'a, Equipped>,
+                       ReadStorage<'a, Position>,
+                       WriteExpect<'a, ParticleBuilder>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped) = data;
+        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder) = data;
 
         for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
             if stats.hp > 0 {
@@ -35,6 +37,11 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         if equipped_by.owner == wants_melee.target {
                             defensive_bonus += defence_bonus.defence;
                         }
+                    }
+
+                    let pos = positions.get(wants_melee.target);
+                    if let Some(pos) = pos {
+                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                     }
 
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defence + defensive_bonus));

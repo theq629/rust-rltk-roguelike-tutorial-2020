@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder};
 
 pub struct ItemCollectionSystem {}
 
@@ -45,10 +45,12 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Equippable>,
                        WriteStorage<'a, Equipped>,
-                       WriteStorage<'a, InBackpack>);
+                       WriteStorage<'a, InBackpack>,
+                       ReadStorage<'a, Position>,
+                       WriteExpect<'a, ParticleBuilder>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack) = data;
+        let (player_entity, map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             let mut targets: Vec<Entity> = Vec::new();
@@ -71,6 +73,7 @@ impl<'a> System<'a> for ItemUseSystem {
                                 for mob in map.tile_content[idx].iter() {
                                     targets.push(*mob);
                                 }
+                                particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 200.0);
                             }
                         }
                     }
@@ -117,6 +120,9 @@ impl<'a> System<'a> for ItemUseSystem {
                             if entity == *player_entity {
                                 gamelog.entries.push(format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healing_provider.heal_amount));
                             }
+                            if let Some(pos) = positions.get(*target) {
+                                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 200.0);
+                            }
                         }
                     }
                 }
@@ -132,6 +138,9 @@ impl<'a> System<'a> for ItemUseSystem {
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
                             gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                        }
+                        if let Some(pos) = positions.get(*mob) {
+                            particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                         }
                     }
                 }
@@ -149,6 +158,9 @@ impl<'a> System<'a> for ItemUseSystem {
                                 let mob_name = names.get(*mob).unwrap();
                                 let item_name = names.get(useitem.item).unwrap();
                                 gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                            }
+                            if let Some(pos) = positions.get(*mob) {
+                                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 200.0);
                             }
                         }
                     }

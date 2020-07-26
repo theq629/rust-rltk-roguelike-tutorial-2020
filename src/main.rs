@@ -169,6 +169,7 @@ impl State {
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
+        systems::particle_system::cull_dead_particles(&mut self.ecs, ctx);
         
         let mut newrunstate;
         {
@@ -332,6 +333,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<DefenceBonus>();
     ecs.register::<SerializationHelper>();
     ecs.register::<SimpleMarker<SerializeMe>>();
+    ecs.register::<ParticleLifetime>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }
 
@@ -359,6 +361,7 @@ fn main() -> rltk::BError {
     let mut rng = rltk::RandomNumberGenerator::new();
     let map = Map::new_map_room_and_corridors(1, &mut rng);
     gs.ecs.insert(rng);
+    gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
     gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
     gs.ecs.insert(gamelog::GameLog{
         entries: vec!["Welcome to Rusty Roguelike".to_string()]

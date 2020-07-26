@@ -13,6 +13,8 @@ pub mod damage_system;
 pub use damage_system::DamageSystem;
 mod inventory_system;
 pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem};
+pub mod particle_system;
+pub use particle_system::{ParticleSpawnSystem};
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()

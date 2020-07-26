@@ -28,7 +28,8 @@ construct_dispatcher!(
     (ItemCollectionSystem, "item_collection", &[]),
     (ItemUseSystem, "item_use", &[]),
     (ItemDropSystem, "item_drop", &[]),
-    (ItemRemoveSystem, "item_remove", &[])
+    (ItemRemoveSystem, "item_remove", &[]),
+    (ParticleSpawnSystem, "particle_spawn", &[])
 );
 
 pub fn new() -> Box<dyn UnifiedDispatcher + 'static> {

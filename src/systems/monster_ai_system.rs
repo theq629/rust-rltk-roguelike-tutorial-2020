@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder};
 
 pub struct MonsterAI {}
 
@@ -13,10 +13,11 @@ impl<'a> System<'a> for MonsterAI {
                        WriteStorage<'a, Position>,
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Monster>,
-                       WriteStorage<'a, WantsToMelee>);
+                       WriteStorage<'a, WantsToMelee>,
+                       WriteExpect<'a, ParticleBuilder>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_pos, player_entity, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee) = data;
+        let (mut map, player_pos, player_entity, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder) = data;
 
         for (entity, mut viewshed, mut pos, _monster) in (&entities, &mut viewshed, &mut pos, &monster).join() {
             let mut can_act = true;
@@ -28,6 +29,7 @@ impl<'a> System<'a> for MonsterAI {
                     confused.remove(entity);
                 }
                 can_act = false;
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 200.0);
             }
 
             if can_act {
