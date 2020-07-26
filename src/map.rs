@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashSet;
 use rltk::{Point, BaseMap, Algorithm2D};
 use specs::prelude::*;
 use super::{Rect}; 
@@ -23,6 +24,7 @@ pub struct Map {
     pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
     pub depth: i32,
+    pub bloodstains: HashSet<usize>,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -44,7 +46,8 @@ impl Map {
             visible_tiles: vec![false; MAPCOUNT],
             blocked: vec![false; MAPCOUNT],
             tile_content: vec![Vec::new(); MAPCOUNT],
-            depth: new_depth
+            depth: new_depth,
+            bloodstains: HashSet::new()
         };
 
         const MAX_ROOMS: i32 = 30;

@@ -16,6 +16,7 @@ fn draw_map(ecs: &World, ctx: &mut Rltk) {
     for (idx, tile) in map.tiles.iter().enumerate() {
         let glyph;
         let mut fg;
+        let mut bg = RGB::from_f32(0., 0., 0.);
         if map.revealed_tiles[idx] {
             match tile {
                 TileType::Floor => {
@@ -31,10 +32,14 @@ fn draw_map(ecs: &World, ctx: &mut Rltk) {
                     fg = RGB::from_f32(0., 1.0, 1.0);
                 }
             }
-            if !map.visible_tiles[idx] {
-                fg = fg.to_greyscale()
+            if map.bloodstains.contains(&idx) {
+                bg = RGB::from_f32(0.75, 0., 0.);
             }
-            ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
+            if !map.visible_tiles[idx] {
+                fg = fg.to_greyscale();
+                bg = RGB::from_f32(0., 0., 0.);
+            }
+            ctx.set(x, y, fg, bg, glyph);
         }
         x += 1;
         if x >= map.width {
@@ -61,7 +66,7 @@ fn draw_entities(ecs: &World, ctx: &mut Rltk) {
 }
 
 fn wall_glyph(map: &Map, x: i32, y: i32) -> rltk::FontCharType {
-    if x < 1 || x > map.width - 2 || y < 1 || x > map.height - 2 {
+    if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 {
         return 35;
     }
 
