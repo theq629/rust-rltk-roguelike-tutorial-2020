@@ -1,7 +1,11 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster}; 
+use super::{State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system}; 
+
+pub struct KeyState {
+    pub requested_auto_move: bool
+}
 
 fn skip_turn(ecs: &mut World) -> RunState {
     let player_entity = ecs.fetch::<Entity>();
@@ -32,6 +36,22 @@ fn skip_turn(ecs: &mut World) -> RunState {
 }
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
+    let mut auto_move = false;
+    {
+        let mut state = ecs.fetch_mut::<KeyState>();
+        if state.requested_auto_move {
+            state.requested_auto_move = false;
+            auto_move = true;
+        }
+    }
+    let player_entity = *ecs.fetch::<Entity>();
+    if auto_move {
+        auto_movement_system::start(ecs, player_entity, Point::new(delta_x, delta_y));
+        return;
+    } else {
+        auto_movement_system::stop(ecs, player_entity);
+    }
+
     let mut positions = ecs.write_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
     let mut viewsheds = ecs.write_storage::<Viewshed>();
@@ -100,7 +120,7 @@ fn try_next_level(ecs: &mut World) -> bool {
     }
 }
 
-pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     match ctx.key {
         None => { return RunState::AwaitingInput },
         Some(key) => match key {
@@ -132,6 +152,11 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             VirtualKeyCode::Numpad1 |
             VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
 
+            VirtualKeyCode::A => {
+                let mut state = gs.ecs.fetch_mut::<KeyState>();
+                state.requested_auto_move = true;
+            }
+
             VirtualKeyCode::Period => {
                 if try_next_level(&mut gs.ecs) {
                     return RunState::NextLevel;
@@ -156,5 +181,23 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             _ => { return RunState::AwaitingInput }
         },
     }
+
     RunState::PlayerTurn
+}
+
+pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+    let newrunstate = handle_input(gs, ctx);
+    let player_entity = *gs.ecs.fetch::<Entity>();
+    match newrunstate {
+        RunState::AwaitingInput => {
+            if auto_movement_system::is_auto_moving(&gs.ecs, player_entity) {
+                return RunState::PlayerTurn
+            }
+        }
+        RunState::PlayerTurn => {}
+        _ => {
+            auto_movement_system::stop(&mut gs.ecs, player_entity);
+        }
+    }
+    newrunstate
 }

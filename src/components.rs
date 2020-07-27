@@ -1,8 +1,9 @@
+use std::collections::HashSet;
 use specs::prelude::*;
 use specs_derive::*;
 use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload};
-use rltk::{RGB};
+use rltk::{RGB, Point};
 use specs::error::NoError;
 
 #[derive(Component, ConvertSaveload, Clone)]
@@ -161,4 +162,12 @@ pub struct SerializationHelper {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct ParticleLifetime {
     pub lifetime_ms: f32
+}
+
+#[derive(Component, Clone)]
+pub struct MovingAutomatically {
+    pub direction: Point,
+    pub seen_entities: HashSet<Entity>,
+    pub right_clearance: i32,
+    pub left_clearance: i32
 }

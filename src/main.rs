@@ -334,6 +334,7 @@ fn setup_ecs(ecs: &mut World) {
     ecs.register::<SerializationHelper>();
     ecs.register::<SimpleMarker<SerializeMe>>();
     ecs.register::<ParticleLifetime>();
+    ecs.register::<MovingAutomatically>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }
 
@@ -360,6 +361,7 @@ fn main() -> rltk::BError {
     setup_ecs(&mut gs.ecs);
     let mut rng = rltk::RandomNumberGenerator::new();
     let map = Map::new_map_room_and_corridors(1, &mut rng);
+    gs.ecs.insert(KeyState{ requested_auto_move: false });
     gs.ecs.insert(rng);
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
     gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
