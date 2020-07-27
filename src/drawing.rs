@@ -78,22 +78,48 @@ fn wall_glyph(map: &Map, x: i32, y: i32) -> rltk::FontCharType {
     if is_revealed_and_wall(map, x + 1, y) { mask += 8; }
 
     match mask {
-        0 => { 9 }
-        1 => { 186 }
-        2 => { 186 }
-        3 => { 186 }
-        4 => { 205 }
-        5 => { 188 }
-        6 => { 187 }
-        7 => { 185 }
-        8 => { 205 }
-        9 => { 200 }
-        10 => { 201 }
-        11 => { 204 }
-        12 => { 205 }
-        13 => { 202 }
-        14 => { 203 }
-        15 => { 206 }
+        0 => {
+            let mut mask: u8 = 0;
+
+            if is_revealed_and_not_wall(map, x, y - 1) { mask += 1; }
+            if is_revealed_and_not_wall(map, x, y + 1) { mask += 2; }
+            if is_revealed_and_not_wall(map, x - 1, y) { mask += 4; }
+            if is_revealed_and_not_wall(map, x + 1, y) { mask += 8; }
+
+            match mask {
+                1 => { 205 } // N
+                2 => { 205 } // S
+                3 => { 205 } // NS
+                4 => { 186 } // W
+                5 => { 201 } // NW
+                6 => { 200 } // SW
+                7 => { 9 } // NSW
+                8 => { 186 } // E
+                9 => { 187 } // NE
+                10 => { 188 } // SE
+                11 => { 9 } // NSE
+                12 => { 186 } // EW
+                13 => { 9 } // EWS
+                14 => { 9 } // EWN
+                15 => { 9 } // NSEW
+                _ => { 35 }
+            }
+        }
+        1 => { 186 } // N
+        2 => { 186 } // S
+        3 => { 186 } // NS
+        4 => { 205 } // W
+        5 => { 188 } // NW
+        6 => { 187 } // SW
+        7 => { 185 } // NSW
+        8 => { 205 } // E
+        9 => { 200 } // NE
+        10 => { 201 } // SE
+        11 => { 204 } // NSE
+        12 => { 205 } // EW
+        13 => { 202 } // EWS
+        14 => { 203 } // EWN
+        15 => { 206 } // NSEW
         _ => { 35 }
     }
 }
@@ -101,4 +127,9 @@ fn wall_glyph(map: &Map, x: i32, y: i32) -> rltk::FontCharType {
 fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
     let idx = map.xy_idx(x, y);
     map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
+}
+
+fn is_revealed_and_not_wall(map: &Map, x: i32, y: i32) -> bool {
+    let idx = map.xy_idx(x, y);
+    map.tiles[idx] != TileType::Wall && map.revealed_tiles[idx]
 }
