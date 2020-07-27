@@ -36,7 +36,7 @@ impl Map {
         (y as usize * self.width as usize) + x as usize
     }
 
-    pub fn new_map_room_and_corridors(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> Map {
+    pub fn new(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> Map {
         let mut map = Map {
             tiles: vec![TileType::Wall; MAPCOUNT],
             rooms: Vec::new(),

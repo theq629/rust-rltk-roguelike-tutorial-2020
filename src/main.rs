@@ -91,7 +91,7 @@ impl State {
         {
             let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = Map::new_map_room_and_corridors(1, &mut rng);
+            *worldmap_resource = Map::new(1, &mut rng);
             worldmap = worldmap_resource.clone();
         }
 
@@ -131,7 +131,7 @@ impl State {
             let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
             current_depth = worldmap_resource.depth;
-            *worldmap_resource = Map::new_map_room_and_corridors(current_depth + 1, &mut rng);
+            *worldmap_resource = Map::new(current_depth + 1, &mut rng);
             worldmap = worldmap_resource.clone();
         }
 
@@ -360,7 +360,7 @@ fn main() -> rltk::BError {
     };
     setup_ecs(&mut gs.ecs);
     let mut rng = rltk::RandomNumberGenerator::new();
-    let map = Map::new_map_room_and_corridors(1, &mut rng);
+    let map = Map::new(1, &mut rng);
     gs.ecs.insert(KeyState{ requested_auto_move: false });
     gs.ecs.insert(rng);
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
