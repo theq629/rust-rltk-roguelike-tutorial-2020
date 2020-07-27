@@ -66,10 +66,6 @@ fn draw_entities(ecs: &World, ctx: &mut Rltk) {
 }
 
 fn wall_glyph(map: &Map, x: i32, y: i32) -> rltk::FontCharType {
-    if x < 1 || x > map.width - 2 || y < 1 || y > map.height - 2 {
-        return 35;
-    }
-
     let mut mask: u8 = 0;
 
     if is_revealed_and_wall(map, x, y - 1) { mask += 1; }
@@ -125,11 +121,17 @@ fn wall_glyph(map: &Map, x: i32, y: i32) -> rltk::FontCharType {
 }
 
 fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
+    if x < 0 || x >= map.width || y < 0 || y >= map.height {
+        return false;
+    }
     let idx = map.xy_idx(x, y);
     map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
 }
 
 fn is_revealed_and_not_wall(map: &Map, x: i32, y: i32) -> bool {
+    if x < 0 || x >= map.width || y < 0 || y >= map.height {
+        return false;
+    }
     let idx = map.xy_idx(x, y);
     map.tiles[idx] != TileType::Wall && map.revealed_tiles[idx]
 }
