@@ -14,6 +14,7 @@ pub use rect::*;
 mod drawing;
 mod gui;
 mod gamelog;
+mod stuff;
 mod spawner;
 mod saveload_system;
 mod random_table;
@@ -100,7 +101,7 @@ impl State {
         }
 
         let (player_x, player_y) = worldmap.rooms[0].centre();
-        let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
+        let player_entity = stuff::player(&mut self.ecs, player_x, player_y);
         let mut player_position = self.ecs.write_resource::<Point>();
         *player_position = Point::new(player_x, player_y);
         let mut position_components = self.ecs.write_storage::<Position>();
@@ -340,7 +341,7 @@ fn setup_ecs(ecs: &mut World) {
 
 fn setup_world(ecs: &mut World, map : &Map) {
     let (player_x, player_y) = map.rooms[0].centre();
-    let player_entity = spawner::player(ecs, player_x, player_y);
+    let player_entity = stuff::player(ecs, player_x, player_y);
     ecs.insert(Point::new(player_x, player_y));
     ecs.insert(player_entity);
 
