@@ -1,7 +1,6 @@
 extern crate serde;
-use rltk::{Rltk, GameState, Point};
+use rltk::{Rltk, GameState};
 use specs::prelude::*;
-use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
 mod components;
 pub use components::*;
@@ -20,6 +19,7 @@ mod saveload_system;
 mod random_table;
 mod systems;
 use systems::damage_system::{delete_the_dead};
+mod state;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -37,137 +37,7 @@ pub enum RunState {
     GameOver
 }
 
-pub struct State {
-    ecs: World,
-    dispatcher: Box<dyn systems::UnifiedDispatcher + 'static>
-}
-
-impl State {
-    fn run_systems(&mut self) {
-        self.dispatcher.run_now(&mut self.ecs);
-        self.ecs.maintain();
-    }
-
-    fn entities_to_remove_on_level_change(&mut self) -> Vec<Entity> {
-        let entities = self.ecs.entities();
-        let player = self.ecs.read_storage::<Player>();
-        let backpack = self.ecs.read_storage::<InBackpack>();
-        let player_entity = self.ecs.fetch::<Entity>();
-        let equipped = self.ecs.read_storage::<Equipped>();
-
-        let mut to_delete: Vec<Entity> = Vec::new();
-        for entity in entities.join() {
-            let mut should_delete = true;
-            if let Some(_) = player.get(entity) {
-                should_delete = false;
-            }
-            if let Some(bp) = backpack.get(entity) {
-                if bp.owner == *player_entity {
-                    should_delete = false;
-                }
-            }
-            if let Some(eq) = equipped.get(entity) {
-                if eq.owner == *player_entity {
-                    should_delete = true;
-                }
-            }
-            if should_delete {
-                to_delete.push(entity);
-            }
-        }
-
-        to_delete
-    }
-
-    fn game_over_cleanup(&mut self) {
-        let mut to_delete = Vec::new();
-        for e in self.ecs.entities().join() {
-            to_delete.push(e);
-        }
-        for del in to_delete.iter() {
-            self.ecs.delete_entity(*del).expect("Deletion failed");
-        }
-
-        let worldmap;
-        {
-            let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = Map::new(1, &mut rng);
-            worldmap = worldmap_resource.clone();
-        }
-
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, 1);
-        }
-
-        let (player_x, player_y) = worldmap.rooms[0].centre();
-        let player_entity = stuff::player(&mut self.ecs, player_x, player_y);
-        let mut player_position = self.ecs.write_resource::<Point>();
-        *player_position = Point::new(player_x, player_y);
-        let mut position_components = self.ecs.write_storage::<Position>();
-        let mut player_entity_writer = self.ecs.write_resource::<Entity>();
-        *player_entity_writer = player_entity;
-        let player_pos_comp = position_components.get_mut(player_entity);
-        if let Some(player_pos_comp) = player_pos_comp {
-            player_pos_comp.x = player_x;
-            player_pos_comp.y = player_y;
-        }
-
-        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
-        let vs = viewshed_components.get_mut(player_entity);
-        if let Some(vs) = vs {
-            vs.dirty = true;
-        }
-    }
-
-    fn goto_next_level(&mut self) {
-        let to_delete = self.entities_to_remove_on_level_change();
-        for target in to_delete {
-            self.ecs.delete_entity(target).expect("Unable to delete entity");
-        }
-
-        let worldmap;
-        let current_depth;
-        {
-            let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            current_depth = worldmap_resource.depth;
-            *worldmap_resource = Map::new(current_depth + 1, &mut rng);
-            worldmap = worldmap_resource.clone();
-        }
-
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, current_depth+1);
-        }
-
-        let (player_x, player_y) = worldmap.rooms[0].centre();
-        let mut player_position = self.ecs.write_resource::<Point>();
-        *player_position = Point::new(player_x, player_y);
-        let mut position_components = self.ecs.write_storage::<Position>();
-        let player_entity = self.ecs.fetch::<Entity>();
-        let player_pos_comp = position_components.get_mut(*player_entity);
-        if let Some(player_pos_comp) = player_pos_comp {
-            player_pos_comp.x = player_x;
-            player_pos_comp.y = player_y;
-        }
-
-        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
-        let vs = viewshed_components.get_mut(*player_entity);
-        if let Some(vs) = vs {
-            vs.dirty = true;
-        }
-
-        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.push("You descend to the next level, and take a moment to heal.".to_string());
-        let mut player_health_store = self.ecs.write_storage::<CombatStats>();
-        let player_health = player_health_store.get_mut(*player_entity);
-        if let Some(player_health) = player_health {
-            player_health.hp = i32::max(player_health.hp, player_health.max_hp / 2);
-        }
-    }
-}
-
-impl GameState for State {
+impl GameState for state::State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
         systems::particle_system::cull_dead_particles(&mut self.ecs, ctx);
@@ -305,63 +175,14 @@ impl GameState for State {
     }
 }
 
-fn setup_ecs(ecs: &mut World) {
-    ecs.register::<Position>();
-    ecs.register::<Renderable>();
-    ecs.register::<Player>();
-    ecs.register::<Viewshed>();
-    ecs.register::<Monster>();
-    ecs.register::<Name>();
-    ecs.register::<BlocksTile>();
-    ecs.register::<CombatStats>();
-    ecs.register::<WantsToMelee>();
-    ecs.register::<SufferDamage>();
-    ecs.register::<Item>();
-    ecs.register::<ProvidesHealing>();
-    ecs.register::<InBackpack>();
-    ecs.register::<WantsToPickupItem>();
-    ecs.register::<WantsToUseItem>();
-    ecs.register::<WantsToDropItem>();
-    ecs.register::<WantsToRemoveItem>();
-    ecs.register::<Consumable>();
-    ecs.register::<Ranged>();
-    ecs.register::<InflictsDamage>();
-    ecs.register::<AreaOfEffect>();
-    ecs.register::<Confusion>();
-    ecs.register::<Equippable>();
-    ecs.register::<Equipped>();
-    ecs.register::<MeleePowerBonus>();
-    ecs.register::<DefenceBonus>();
-    ecs.register::<SerializationHelper>();
-    ecs.register::<SimpleMarker<SerializeMe>>();
-    ecs.register::<ParticleLifetime>();
-    ecs.register::<MovingAutomatically>();
-    ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
-}
-
-fn setup_world(ecs: &mut World, map : &Map) {
-    let (player_x, player_y) = map.rooms[0].centre();
-    let player_entity = stuff::player(ecs, player_x, player_y);
-    ecs.insert(Point::new(player_x, player_y));
-    ecs.insert(player_entity);
-
-    for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(ecs, room, 1);
-    }
-}
-
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
         .build()?;
-    let mut gs = State {
-        ecs: World::new(),
-        dispatcher: systems::build()
-    };
+    let mut gs = state::State::new();
     setup_ecs(&mut gs.ecs);
-    let mut rng = rltk::RandomNumberGenerator::new();
-    let map = Map::new(1, &mut rng);
+    let rng = rltk::RandomNumberGenerator::new();
     gs.ecs.insert(KeyState{ requested_auto_move: false });
     gs.ecs.insert(rng);
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
@@ -369,7 +190,6 @@ fn main() -> rltk::BError {
     gs.ecs.insert(gamelog::GameLog{
         entries: vec!["Welcome to Rusty Roguelike".to_string()]
     });
-    setup_world(&mut gs.ecs, &map);
-    gs.ecs.insert(map);
+    gs.setup_world();
     rltk::main_loop(context, gs)
 }

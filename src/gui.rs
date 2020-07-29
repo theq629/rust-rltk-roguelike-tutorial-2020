@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, Viewshed, RunState, Equipped};
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]

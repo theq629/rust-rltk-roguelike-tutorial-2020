@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use specs::prelude::*;
 use specs_derive::*;
 use serde::{Serialize, Deserialize};
-use specs::saveload::{Marker, ConvertSaveload};
+use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
 
@@ -170,4 +170,38 @@ pub struct MovingAutomatically {
     pub seen_entities: HashSet<Entity>,
     pub right_clearance: i32,
     pub left_clearance: i32
+}
+
+pub fn setup_ecs(ecs: &mut World) {
+    ecs.register::<Position>();
+    ecs.register::<Renderable>();
+    ecs.register::<Player>();
+    ecs.register::<Viewshed>();
+    ecs.register::<Monster>();
+    ecs.register::<Name>();
+    ecs.register::<BlocksTile>();
+    ecs.register::<CombatStats>();
+    ecs.register::<WantsToMelee>();
+    ecs.register::<SufferDamage>();
+    ecs.register::<Item>();
+    ecs.register::<ProvidesHealing>();
+    ecs.register::<InBackpack>();
+    ecs.register::<WantsToPickupItem>();
+    ecs.register::<WantsToUseItem>();
+    ecs.register::<WantsToDropItem>();
+    ecs.register::<WantsToRemoveItem>();
+    ecs.register::<Consumable>();
+    ecs.register::<Ranged>();
+    ecs.register::<InflictsDamage>();
+    ecs.register::<AreaOfEffect>();
+    ecs.register::<Confusion>();
+    ecs.register::<Equippable>();
+    ecs.register::<Equipped>();
+    ecs.register::<MeleePowerBonus>();
+    ecs.register::<DefenceBonus>();
+    ecs.register::<SerializationHelper>();
+    ecs.register::<SimpleMarker<SerializeMe>>();
+    ecs.register::<ParticleLifetime>();
+    ecs.register::<MovingAutomatically>();
+    ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }
