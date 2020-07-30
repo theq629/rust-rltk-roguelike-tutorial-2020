@@ -22,8 +22,8 @@ pub trait UnifiedDispatcher {
 construct_dispatcher!(
     (VisibilitySystem, "visibility", &[]),
     (MonsterAI, "monster_ai", &[]),
-    (AutoMovementSystem, "auto_movement", &[]),
     (MapIndexingSystem, "map_index", &[]),
+    (AutoMovementSystem, "auto_movement", &[]),
     (MeleeCombatSystem, "melee_combat", &[]),
     (DamageSystem, "damage", &[]),
     (ItemCollectionSystem, "item_collection", &[]),
