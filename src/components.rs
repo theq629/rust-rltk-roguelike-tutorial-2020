@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
+use crate::{dancing::Dance};
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
@@ -171,6 +172,12 @@ pub struct MovingAutomatically {
     pub left_clearance: i32
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct Dancing {
+    pub dance: Dance,
+    pub step_idx: u32
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -202,5 +209,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<SimpleMarker<SerializeMe>>();
     ecs.register::<ParticleLifetime>();
     ecs.register::<MovingAutomatically>();
+    ecs.register::<Dancing>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

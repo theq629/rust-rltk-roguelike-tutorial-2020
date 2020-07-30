@@ -4,7 +4,7 @@ pub use dispatcher::UnifiedDispatcher;
 mod visibility_system;
 pub use visibility_system::VisibilitySystem;
 mod monster_ai_system;
-pub use monster_ai_system::MonsterAI;
+pub use monster_ai_system::{MonsterAI, DancingMonsterAI};
 pub mod auto_movement_system;
 pub use auto_movement_system::AutoMovementSystem;
 mod map_indexing_system;

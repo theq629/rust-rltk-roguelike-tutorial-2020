@@ -38,8 +38,8 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
         let y = (*spawn.0 / MAPWIDTH) as i32;
 
         match spawn.1.as_ref() {
-            "Goblin" => goblin(ecs, x, y),
-            "Orc" => orc(ecs, x, y),
+            "Thrall" => thrall(ecs, x, y),
+            "Vampire" => vampire(ecs, x, y),
             "Health Potion" => health_potion(ecs, x, y),
             "Fireball Scroll" => fireball_scroll(ecs, x, y),
             "Confusion Scroll" => confusion_scroll(ecs, x, y),
@@ -55,8 +55,8 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
 
 fn room_table(map_depth: i32) -> RandomTable {
     RandomTable::new()
-        .add("Goblin", 10)
-        .add("Orc", 1 + map_depth)
+        .add("Thrall", 50)
+        .add("Vampire", 10)
         .add("Health Potion", 7)
         .add("Fireball Scroll", 2 + map_depth)
         .add("Confusion Scroll", 2 + map_depth)

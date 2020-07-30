@@ -3,6 +3,7 @@ use rltk::{Rltk, GameState};
 use specs::prelude::*;
 
 mod components;
+mod dancing;
 pub use components::*;
 mod map;
 pub use map::*;

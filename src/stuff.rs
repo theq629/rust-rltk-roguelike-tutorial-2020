@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, Dancing, dancing};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -20,27 +20,38 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .build()
 }
 
-pub fn orc(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('o'), "Orc", 16, 1, 4);
-}
-
-pub fn goblin(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('g'), "Goblin", 8, 1, 3);
-}
-
-pub fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: S, max_hp: i32, defence: i32, power: i32) {
+pub fn vampire(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position{ x, y })
+        .with(Name{ name: "Vampire".to_string() })
         .with(Renderable{
-            glyph: glyph,
-            fg: RGB::named(rltk::RED),
+            glyph: rltk::to_cp437('V'),
+            fg: RGB::named(rltk::WHITE),
             render_order: 1
         })
-        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(Monster{})
-        .with(Name{ name: name.to_string() })
         .with(BlocksTile{})
-        .with(CombatStats{ max_hp: max_hp, hp: max_hp, defence: defence, power: power })
+        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(Dancing{ dance: dancing::circle(), step_idx: 0 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn thrall(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Name{ name: "Thrall".to_string() })
+        .with(Renderable{
+            glyph: rltk::to_cp437('v'),
+            fg: RGB::named(rltk::WHITE),
+            render_order: 1
+        })
+        .with(Monster{})
+        .with(BlocksTile{})
+        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(Dancing{ dance: dancing::jiggle(), step_idx: 0 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
