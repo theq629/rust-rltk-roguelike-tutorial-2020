@@ -8,7 +8,6 @@ struct ParticleRequest {
     x: i32,
     y: i32,
     fg: RGB,
-    bg: RGB,
     glyph: rltk::FontCharType,
     lifetime: f32
 }
@@ -39,9 +38,9 @@ impl ParticleBuilder {
         ParticleBuilder{ requests: Vec::new() }
     }
 
-    pub fn request(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: rltk::FontCharType, lifetime: f32) {
+    pub fn request(&mut self, x: i32, y: i32, fg: RGB, glyph: rltk::FontCharType, lifetime: f32) {
         self.requests.push(
-            ParticleRequest{ x, y, fg, bg, glyph, lifetime }
+            ParticleRequest{ x, y, fg, glyph, lifetime }
         )
     }
 }
@@ -58,7 +57,7 @@ impl<'a> System<'a> for ParticleSpawnSystem {
         for new_particle in particle_builder.requests.iter() {
             let p = entities.create();
             positions.insert(p, Position{ x: new_particle.x, y: new_particle.y }).expect("Unable to insert position");
-            renderables.insert(p, Renderable{ fg: new_particle.fg, bg: new_particle.bg, glyph: new_particle.glyph, render_order: 0 }).expect("Unable to insert renderable");
+            renderables.insert(p, Renderable{ fg: new_particle.fg, glyph: new_particle.glyph, render_order: 0 }).expect("Unable to insert renderable");
             particles.insert(p, ParticleLifetime{ lifetime_ms: new_particle.lifetime }).expect("Unable to insert lifetime");
         }
         particle_builder.requests.clear();

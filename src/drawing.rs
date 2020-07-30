@@ -25,6 +25,7 @@ pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
         screen_x += 1;
     }
 
+    let bg = RGB::from_f32(0., 0., 0.);
     let positions = ecs.read_storage::<Position>();
     let renderables = ecs.read_storage::<Renderable>();
     let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
@@ -35,7 +36,7 @@ pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
             if map.visible_tiles[idx] {
                 let screen_x = pos.x - world_min_x;
                 let screen_y = pos.y - world_min_y;
-                ctx.set(screen_x, screen_y, render.fg, render.bg, render.glyph);
+                ctx.set(screen_x, screen_y, render.fg, bg, render.glyph);
             }
         }
     }

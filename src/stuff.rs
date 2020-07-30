@@ -10,7 +10,6 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
             fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
             render_order: 0
         })
         .with(Player{})
@@ -35,7 +34,6 @@ pub fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontC
         .with(Renderable{
             glyph: glyph,
             fg: RGB::named(rltk::RED),
-            bg: RGB::named(rltk::BLACK),
             render_order: 1
         })
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
@@ -53,7 +51,6 @@ pub fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('¡'),
             fg: RGB::named(rltk::MAGENTA),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Health Potion".to_string() })
@@ -70,7 +67,6 @@ pub fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::CYAN),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Magic Missile Scroll".to_string() })
@@ -88,7 +84,6 @@ pub fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::ORANGE),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Fireball Scroll".to_string() })
@@ -107,7 +102,6 @@ pub fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::PINK),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Confusion Scroll".to_string() })
@@ -125,7 +119,6 @@ pub fn dagger(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::CYAN),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Dagger".to_string() })
@@ -142,7 +135,6 @@ pub fn longsword(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Longsword".to_string() })
@@ -159,7 +151,6 @@ pub fn shield(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('('),
             fg: RGB::named(rltk::CYAN),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Shield".to_string() })
@@ -176,7 +167,6 @@ pub fn tower_shield(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('('),
             fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
             render_order: 2
         })
         .with(Name{ name: "Tower Shield".to_string() })
