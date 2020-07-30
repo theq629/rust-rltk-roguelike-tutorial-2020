@@ -1,67 +1,75 @@
+use std::cmp::{min, max};
 use specs::prelude::*;
 use rltk::prelude::*;
 use super::{Position, Renderable};
 use super::map::{Map, TileType};
 
 pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
-    draw_map(ecs, ctx);
-    draw_entities(ecs, ctx);
-}
+    let view_centre = ecs.fetch::<Point>();
 
-fn draw_map(ecs: &World, ctx: &mut Rltk) {
     let map = ecs.fetch::<Map>();
 
-    let mut y = 0;
-    let mut x = 0;
-    for (idx, tile) in map.tiles.iter().enumerate() {
-        let glyph;
-        let mut fg;
-        let mut bg = RGB::from_f32(0., 0., 0.);
-        if map.revealed_tiles[idx] {
-            match tile {
-                TileType::Floor => {
-                    glyph = rltk::to_cp437('.');
-                    fg = RGB::from_f32(0.0, 0.5, 0.5);
-                },
-                TileType::Wall => {
-                    glyph = wall_glyph(&*map, x, y);
-                    fg = RGB::from_f32(0., 1.0, 0.);
-                },
-                TileType::DownStairs => {
-                    glyph = rltk::to_cp437('>');
-                    fg = RGB::from_f32(0., 1.0, 1.0);
-                }
-            }
-            if map.bloodstains.contains(&idx) {
-                bg = RGB::from_f32(0.3, 0., 0.);
-            }
-            if !map.visible_tiles[idx] {
-                fg = fg.to_greyscale();
-                bg = RGB::from_f32(0., 0., 0.);
-            }
-            ctx.set(x, y, fg, bg, glyph);
+    let (screen_width, screen_height) = ctx.get_char_size();
+    let world_min_x = max(0, view_centre.x - (screen_width / 2) as i32);
+    let world_max_x = min(map.width, world_min_x + screen_width as i32);
+    let world_min_y = max(0, view_centre.y - (screen_height / 2) as i32);
+    let world_max_y = min(map.height, world_min_y + screen_height as i32);
+
+    let mut screen_x = 0;
+    for world_x in world_min_x..world_max_x {
+        let mut screen_y = 0;
+        for world_y in world_min_y..world_max_y {
+            draw_cell(world_x, world_y, screen_x, screen_y, &map, ctx);
+            screen_y += 1;
         }
-        x += 1;
-        if x >= map.width {
-            x = 0;
-            y += 1;
+        screen_x += 1;
+    }
+
+    let positions = ecs.read_storage::<Position>();
+    let renderables = ecs.read_storage::<Renderable>();
+    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+    data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
+    for (pos, render) in data.iter() {
+        if pos.x >= world_min_x && pos.x < world_max_x && pos.y >= world_min_y && pos.y < world_max_y {
+            let idx = map.xy_idx(pos.x, pos.y);
+            if map.visible_tiles[idx] {
+                let screen_x = pos.x - world_min_x;
+                let screen_y = pos.y - world_min_y;
+                ctx.set(screen_x, screen_y, render.fg, render.bg, render.glyph);
+            }
         }
     }
 }
 
-fn draw_entities(ecs: &World, ctx: &mut Rltk) {
-    let map = ecs.fetch::<Map>();
-    let positions = ecs.read_storage::<Position>();
-    let renderables = ecs.read_storage::<Renderable>();
-
-    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-    data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-
-    for (pos, render) in data.iter() {
-        let idx = map.xy_idx(pos.x, pos.y);
-        if map.visible_tiles[idx] {
-            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map, ctx: &mut Rltk) {
+    let idx = map.xy_idx(world_x, world_y);
+    let glyph;
+    let mut fg;
+    let mut bg = RGB::from_f32(0., 0., 0.);
+    if map.revealed_tiles[idx] {
+        let tile = map.tiles[idx];
+        match tile {
+            TileType::Floor => {
+                glyph = rltk::to_cp437('.');
+                fg = RGB::from_f32(0.0, 0.5, 0.5);
+            },
+            TileType::Wall => {
+                glyph = wall_glyph(&*map, world_x, world_y);
+                fg = RGB::from_f32(0., 1.0, 0.);
+            },
+            TileType::DownStairs => {
+                glyph = rltk::to_cp437('>');
+                fg = RGB::from_f32(0., 1.0, 1.0);
+            }
         }
+        if map.bloodstains.contains(&idx) {
+            bg = RGB::from_f32(0.3, 0., 0.);
+        }
+        if !map.visible_tiles[idx] {
+            fg = fg.to_greyscale();
+            bg = RGB::from_f32(0., 0., 0.);
+        }
+        ctx.set(screen_x, screen_y, fg, bg, glyph);
     }
 }
 
