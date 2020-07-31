@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, Dancing, dancing};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, Dancing, dancing::Dance, Awe};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -16,6 +16,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(Name{ name: "Player".to_string() })
         .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
+        .with(Awe{ max_awe: 10, awe: 0 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
@@ -33,7 +34,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
-        .with(Dancing{ dance: dancing::circle(), step_idx: 0 })
+        .with(Dancing{ steps: Dance::CIRCLE.steps(), step_idx: 0 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -51,7 +52,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
-        .with(Dancing{ dance: dancing::jiggle(), step_idx: 0 })
+        .with(Dancing{ steps: Dance::JITTER.steps(), step_idx: 0 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

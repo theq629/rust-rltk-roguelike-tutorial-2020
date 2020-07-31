@@ -27,6 +27,8 @@ construct_dispatcher!(
     (AutoMovementSystem, "auto_movement", &[]),
     (MeleeCombatSystem, "melee_combat", &[]),
     (DamageSystem, "damage", &[]),
+    (AwesomenessSystem, "awesomeness", &[]),
+    (EffectsSystem, "effects", &[]),
     (ItemCollectionSystem, "item_collection", &[]),
     (ItemUseSystem, "item_use", &[]),
     (ItemDropSystem, "item_drop", &[]),

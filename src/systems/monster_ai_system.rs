@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest};
 
 pub struct MonsterAI {}
 
@@ -71,28 +71,30 @@ impl<'a> System<'a> for DancingMonsterAI {
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Monster>,
                        WriteExpect<'a, ParticleBuilder>,
-                       WriteStorage<'a, Dancing>);
+                       WriteStorage<'a, Dancing>,
+                       WriteStorage<'a, EffectRequest>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, entities, mut pos, mut confused, monster, mut particle_builder, mut dancers) = data;
+        let (map, runstate, entities, mut pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, mut pos, _monster, mut dancer) in (&entities, &mut pos, &monster, &mut dancers).join() {
-            let dpos = dancer.dance.steps[dancer.step_idx as usize].direction;
-            dancer.step_idx = (dancer.step_idx + 1) % dancer.dance.steps.len() as u32;
-            if dpos.x != 0 || dpos.y != 0 {
-                let new_x = pos.x + dpos.x;
-                let new_y = pos.y + dpos.y;
-                let new_idx = map.xy_idx(new_x, new_y);
-                if map.blocked[new_idx] {
-                    confused.insert(entity, Confusion{ turns: 3 }).expect("Failed to insert confusion.");
-                    to_stop.push(entity);
-                } else {
-                    pos.x = new_x;
-                    pos.y = new_y;
-                    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
+            let step = &dancer.steps[dancer.step_idx as usize];
+            dancer.step_idx = (dancer.step_idx + 1) % dancer.steps.len() as u32;
+            let new_x = pos.x + step.direction.x;
+            let new_y = pos.y + step.direction.y;
+            let new_idx = map.xy_idx(new_x, new_y);
+            if map.blocked[new_idx] {
+                confused.insert(entity, Confusion{ turns: 3 }).expect("Failed to insert confusion.");
+                to_stop.push(entity);
+            } else {
+                pos.x = new_x;
+                pos.y = new_y;
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
+                if let Some(effect) = &step.effect {
+                    effect_requests.insert(entity, EffectRequest { effect: effect.clone() }).expect("Failed to inert effect request.");
                 }
             }
         }

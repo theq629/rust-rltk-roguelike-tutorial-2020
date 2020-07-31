@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system}; 
+use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system, Awe}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -30,6 +30,9 @@ fn skip_turn(ecs: &mut World) -> RunState {
         let mut health_components = ecs.write_storage::<CombatStats>();
         let player_hp = health_components.get_mut(*player_entity).unwrap();
         player_hp.hp = i32::min(player_hp.hp + 1, player_hp.max_hp);
+        let mut awe_components = ecs.write_storage::<Awe>();
+        let player_awe = awe_components.get_mut(*player_entity).unwrap();
+        player_awe.awe = i32::max(player_awe.awe - 1, 0);
     }
 
     RunState::PlayerTurn

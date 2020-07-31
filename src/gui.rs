@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped};
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -33,7 +33,12 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     for (_player, stats) in (&players, &combat_stats).join() {
         let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
         ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
-        ctx.draw_bar_horizontal(28, 43, 51, stats.hp, stats.max_hp, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+    }
+
+    let awe = ecs.read_storage::<Awe>();
+    for (_player, awe) in (&players, &awe).join() {
+        let s = format!(" Awe: {} / {} ", awe.awe, awe.max_awe);
+        ctx.print_color(25, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 }
 

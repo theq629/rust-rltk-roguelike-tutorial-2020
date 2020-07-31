@@ -50,7 +50,7 @@ pub fn save_game(ecs: &mut World) {
         let data = (ecs.entities(), ecs.read_storage::<SimpleMarker<SerializeMe>>());
         let writer = File::create(SAVE_FILE_PATH).unwrap();
         let mut serializer = serde_json::Serializer::new(writer);
-        serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem, Equippable, Equipped, MeleePowerBonus, DefenceBonus, SerializationHelper, ParticleLifetime, Dancing);
+        serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem, Equippable, Equipped, MeleePowerBonus, DefenceBonus, SerializationHelper, ParticleLifetime, Dancing, Awe, EffectRequest, Awestruck);
     }
 
     ecs.delete_entity(savehelper).expect("Crash on cleanup")
@@ -80,7 +80,7 @@ pub fn load_game(ecs: &mut World) {
 
     {
         let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut ecs.write_resource::<SimpleMarkerAllocator<SerializeMe>>());
-        deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem, Equippable, Equipped, MeleePowerBonus, DefenceBonus, SerializationHelper, ParticleLifetime, Dancing);
+        deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem, Equippable, Equipped, MeleePowerBonus, DefenceBonus, SerializationHelper, ParticleLifetime, Dancing, Awe, EffectRequest, Awestruck);
     }
 
     let mut deleteme: Option<Entity> = None;

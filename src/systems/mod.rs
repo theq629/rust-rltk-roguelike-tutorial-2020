@@ -17,6 +17,10 @@ mod inventory_system;
 pub use inventory_system::{ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem};
 pub mod particle_system;
 pub use particle_system::{ParticleSpawnSystem};
+pub mod effects;
+pub use effects::{EffectsSystem};
+mod awesomeness;
+pub use awesomeness::AwesomenessSystem;
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()
