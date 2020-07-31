@@ -1,6 +1,6 @@
 use specs::prelude::*;
-use rltk::{Point};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest};
+use rltk::{Point, RandomNumberGenerator};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest, CanDoDances, HasArgroedMonsters};
 
 pub struct MonsterAI {}
 
@@ -16,10 +16,13 @@ impl<'a> System<'a> for MonsterAI {
                        ReadStorage<'a, Monster>,
                        WriteStorage<'a, WantsToMelee>,
                        WriteExpect<'a, ParticleBuilder>,
-                       ReadStorage<'a, Dancing>);
+                       WriteStorage<'a, Dancing>,
+                       WriteExpect<'a, RandomNumberGenerator>,
+                       ReadStorage<'a, CanDoDances>,
+                       ReadStorage<'a, HasArgroedMonsters>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder, dancers) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder, mut dancers, mut rng, can_do_dances, has_agroed) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
@@ -40,7 +43,8 @@ impl<'a> System<'a> for MonsterAI {
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
             }
 
-            if can_act {
+            let mut acted = false;
+            if can_act && match has_agroed.get(*player_entity) { None => false, _ => true } {
                 let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
                 if distance < 1.5 {
                     wants_to_melee.insert(entity, WantsToMelee{ target: *player_entity }).expect("Unable to insert attack");
@@ -54,6 +58,19 @@ impl<'a> System<'a> for MonsterAI {
                         pos.x = path.steps[1] as i32 % map.width;
                         pos.y = path.steps[1] as i32 / map.width;
                         viewshed.dirty = true;
+                        acted = true;
+                    }
+                }
+            }
+
+            if !acted {
+                if let Some(can) = can_do_dances.get(entity) {
+                    if rng.roll_dice(1, 10) < 5 {
+                        let i = rng.range(0, can.dances.len());
+                        dancers.insert(entity, Dancing {
+                            steps: can.dances[i].steps(),
+                            step_idx: 0
+                        }).expect("Failed to insert dancing.");
                     }
                 }
             }
@@ -72,17 +89,25 @@ impl<'a> System<'a> for DancingMonsterAI {
                        ReadStorage<'a, Monster>,
                        WriteExpect<'a, ParticleBuilder>,
                        WriteStorage<'a, Dancing>,
-                       WriteStorage<'a, EffectRequest>);
+                       WriteStorage<'a, EffectRequest>,
+                       WriteExpect<'a, RandomNumberGenerator>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, entities, mut pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests) = data;
+        let (map, runstate, entities, mut pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, mut pos, _monster, mut dancer) in (&entities, &mut pos, &monster, &mut dancers).join() {
             let step = &dancer.steps[dancer.step_idx as usize];
-            dancer.step_idx = (dancer.step_idx + 1) % dancer.steps.len() as u32;
+            dancer.step_idx += 1;
+            if dancer.step_idx >= dancer.steps.len() as u32 {
+                if rng.roll_dice(1, 10) < 5 {
+                    to_stop.push(entity);
+                } else {
+                    dancer.step_idx = 0;
+                }
+            }
             let new_x = pos.x + step.direction.x;
             let new_y = pos.y + step.direction.y;
             let new_idx = map.xy_idx(new_x, new_y);

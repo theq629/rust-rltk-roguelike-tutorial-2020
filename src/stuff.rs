@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, Dancing, dancing::Dance, Awe};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Awe};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -34,7 +34,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
-        .with(Dancing{ steps: Dance::CIRCLE.steps(), step_idx: 0 })
+        .with(CanDoDances{ dances: vec![Dance::CIRCLE] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -52,7 +52,25 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
-        .with(Dancing{ steps: Dance::JITTER.steps(), step_idx: 0 })
+        .with(CanDoDances{ dances: vec![Dance::JITTER] })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Name{ name: "Rabbit".to_string() })
+        .with(Renderable{
+            glyph: rltk::to_cp437('r'),
+            fg: RGB::named(rltk::WHITE),
+            render_order: 1
+        })
+        .with(Monster{})
+        .with(BlocksTile{})
+        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(CanDoDances{ dances: vec![Dance::HOP] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

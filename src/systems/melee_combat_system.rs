@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder};
+use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
 
 pub struct MeleeCombatSystem {}
 
@@ -14,12 +14,15 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        ReadStorage<'a, DefenceBonus>,
                        ReadStorage<'a, Equipped>,
                        ReadStorage<'a, Position>,
-                       WriteExpect<'a, ParticleBuilder>);
+                       WriteExpect<'a, ParticleBuilder>,
+                       WriteStorage<'a, HasArgroedMonsters>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder) = data;
+        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed) = data;
 
         for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
+            has_agroed.insert(entity, HasArgroedMonsters {}).expect("Failed to insert agro.");
+
             if stats.hp > 0 {
                 let mut offensive_bonus = 0;
                 for (_item_entity, power_bonus, equipped_by) in (&entities, &melee_power_bonuses, &equipped).join() {
