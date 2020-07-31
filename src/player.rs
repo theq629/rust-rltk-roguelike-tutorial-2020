@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system, Awe}; 
+use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system, Awe, WantsToMove}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -55,15 +55,15 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         auto_movement_system::stop(ecs, player_entity);
     }
 
-    let mut positions = ecs.write_storage::<Position>();
+    let positions = ecs.read_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
-    let mut viewsheds = ecs.write_storage::<Viewshed>();
     let combat_stats = ecs.read_storage::<CombatStats>();
     let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
+    let mut wants_to_moves = ecs.write_storage::<WantsToMove>();
     let entities = ecs.entities();
     let map = ecs.fetch::<Map>();
 
-    for (_player, pos, viewshed, entity) in (&mut players, &mut positions, &mut viewsheds, &entities).join() {
+    for (_player, pos, entity) in (&mut players, &positions, &entities).join() {
         let dest_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
         for potential_target in map.tile_content[dest_idx].iter() {
             let target = combat_stats.get(*potential_target);
@@ -76,12 +76,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
             }
         }
         if !map.blocked[dest_idx] {
-            pos.x = min(map.width - 1, max(0, pos.x + delta_x));
-            pos.y = min(map.height - 1, max(0, pos.y + delta_y));
-            let mut ppos = ecs.write_resource::<Point>();
-            ppos.x = pos.x;
-            ppos.y = pos.y;
-            viewshed.dirty = true;
+            wants_to_moves.insert(entity, WantsToMove {
+                destination: Point::new(
+                    min(map.width - 1, max(0, pos.x + delta_x)),
+                    min(map.height - 1, max(0, pos.y + delta_y))
+                )
+            }).expect("Failed to insert wants move.");
         }
     }
 }

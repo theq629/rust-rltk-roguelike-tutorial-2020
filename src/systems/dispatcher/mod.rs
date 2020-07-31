@@ -20,9 +20,9 @@ pub trait UnifiedDispatcher {
 }
 
 construct_dispatcher!(
-    (VisibilitySystem, "visibility", &[]),
     (MonsterAI, "monster_ai", &[]),
     (DancingMonsterAI, "dancing_monster_ai", &[]),
+    (MovementSystem, "movement", &[]),
     (MapIndexingSystem, "map_index", &[]),
     (AutoMovementSystem, "auto_movement", &[]),
     (MeleeCombatSystem, "melee_combat", &[]),
@@ -33,7 +33,8 @@ construct_dispatcher!(
     (ItemUseSystem, "item_use", &[]),
     (ItemDropSystem, "item_drop", &[]),
     (ItemRemoveSystem, "item_remove", &[]),
-    (ParticleSpawnSystem, "particle_spawn", &[])
+    (ParticleSpawnSystem, "particle_spawn", &[]),
+    (VisibilitySystem, "visibility", &[])
 );
 
 pub fn new() -> Box<dyn UnifiedDispatcher + 'static> {

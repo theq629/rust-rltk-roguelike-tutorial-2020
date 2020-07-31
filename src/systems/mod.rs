@@ -21,6 +21,8 @@ pub mod effects;
 pub use effects::{EffectsSystem};
 mod awesomeness;
 pub use awesomeness::AwesomenessSystem;
+mod movement;
+pub use movement::MovementSystem;
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()

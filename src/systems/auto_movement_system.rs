@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Map, Position, MovingAutomatically, Viewshed, RunState};
+use crate::{Map, Position, MovingAutomatically, Viewshed, RunState, WantsToMove};
 
 pub struct AutoMovementSystem {}
 
@@ -9,29 +9,27 @@ impl<'a> System<'a> for AutoMovementSystem {
     type SystemData = (Entities<'a>,
                        ReadExpect<'a, Map>,
                        ReadExpect<'a, RunState>,
-                       WriteExpect<'a, Point>,
-                       WriteStorage<'a, Position>,
+                       ReadStorage<'a, Position>,
                        WriteStorage<'a, MovingAutomatically>,
-                       WriteStorage<'a, Viewshed>);
+                       ReadStorage<'a, Viewshed>,
+                       WriteStorage<'a, WantsToMove>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, map, runstate, mut player_pos, mut positions, mut auto_moving, mut viewsheds) = data;
+        let (entities, map, runstate, positions, mut auto_moving, viewsheds, mut wants_to_moves) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
         let mut to_remove: Vec<Entity> = Vec::new();
-        for (entity, mut pos, mut auto_move, mut viewshed) in (&entities, &mut positions, &mut auto_moving, &mut viewsheds).join() {
+        for (entity, pos, mut auto_move, viewshed) in (&entities, &positions, &mut auto_moving, &viewsheds).join() {
             let (x, y) = (pos.x + auto_move.direction.x, pos.y + auto_move.direction.y);
             let saw_new = update_seen(&mut auto_move, &viewshed, &map);
             let clearance_grew = update_left_right(&mut auto_move, &Point::new(pos.x, pos.y), &map);
             if saw_new || clearance_grew || x < 0 || x >= map.width || y < 0 || y >= map.height || map.blocked[map.xy_idx(x, y)] {
                 to_remove.push(entity);
             } else {
-                pos.x = x;
-                pos.y = y;
-                player_pos.x = pos.x;
-                player_pos.y = pos.y;
-                viewshed.dirty = true;
+                wants_to_moves.insert(entity, WantsToMove {
+                    destination: Point::new(x, y)
+                }).expect("Failed to insert wants move.");
             }
         }
 

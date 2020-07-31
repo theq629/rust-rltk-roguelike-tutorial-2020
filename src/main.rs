@@ -38,6 +38,13 @@ pub enum RunState {
     GameOver
 }
 
+impl state::State {
+    fn draw_world(&mut self, ctx: &mut Rltk) {
+        drawing::draw_world(&self.ecs, ctx);
+        gui::draw_ui(&self.ecs, ctx);
+    }
+}
+
 impl GameState for state::State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
@@ -50,11 +57,8 @@ impl GameState for state::State {
         }
 
         match newrunstate {
-            RunState::MainMenu{..} => {}
-            _ => {
-                drawing::draw_world(&self.ecs, ctx);
-                gui::draw_ui(&self.ecs, ctx);
-            }
+            RunState::MainMenu {..} => {},
+            _ => { self.draw_world(ctx); }
         }
 
         match newrunstate {

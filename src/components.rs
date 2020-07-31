@@ -201,6 +201,11 @@ pub struct Awestruck {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
+pub struct WantsToMove {
+    pub destination: Point
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct HasArgroedMonsters {}
 
 pub fn setup_ecs(ecs: &mut World) {
@@ -240,5 +245,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<EffectRequest>();
     ecs.register::<Awestruck>();
     ecs.register::<HasArgroedMonsters>();
+    ecs.register::<WantsToMove>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

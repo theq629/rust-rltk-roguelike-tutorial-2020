@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest, CanDoDances, HasArgroedMonsters};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest, CanDoDances, HasArgroedMonsters, WantsToMove};
 
 pub struct MonsterAI {}
 
@@ -11,7 +11,7 @@ impl<'a> System<'a> for MonsterAI {
                        ReadExpect<'a, RunState>,
                        Entities<'a>,
                        WriteStorage<'a, Viewshed>,
-                       WriteStorage<'a, Position>,
+                       ReadStorage<'a, Position>,
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Monster>,
                        WriteStorage<'a, WantsToMelee>,
@@ -19,14 +19,15 @@ impl<'a> System<'a> for MonsterAI {
                        WriteStorage<'a, Dancing>,
                        WriteExpect<'a, RandomNumberGenerator>,
                        ReadStorage<'a, CanDoDances>,
-                       ReadStorage<'a, HasArgroedMonsters>);
+                       ReadStorage<'a, HasArgroedMonsters>,
+                       WriteStorage<'a, WantsToMove>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, mut pos, mut confused, monster, mut wants_to_melee, mut particle_builder, mut dancers, mut rng, can_do_dances, has_agroed) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, pos, mut confused, monster, mut wants_to_melee, mut particle_builder, mut dancers, mut rng, can_do_dances, has_agroed, mut wants_to_moves) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
-        for (entity, mut viewshed, mut pos, _monster) in (&entities, &mut viewshed, &mut pos, &monster).join() {
+        for (entity, mut viewshed, pos, _monster) in (&entities, &mut viewshed, &pos, &monster).join() {
             if let Some(_) = dancers.get(entity) {
                 continue;
             }
@@ -55,8 +56,12 @@ impl<'a> System<'a> for MonsterAI {
                         &mut *map
                     );
                     if path.success && path.steps.len() > 1 {
-                        pos.x = path.steps[1] as i32 % map.width;
-                        pos.y = path.steps[1] as i32 / map.width;
+                        wants_to_moves.insert(entity, WantsToMove {
+                            destination: Point::new(
+                                path.steps[1] as i32 % map.width,
+                                path.steps[1] as i32 / map.width
+                            )
+                        }).expect("Failed to insert wants move.");
                         viewshed.dirty = true;
                         acted = true;
                     }
@@ -84,21 +89,22 @@ impl<'a> System<'a> for DancingMonsterAI {
     type SystemData = (ReadExpect<'a, Map>,
                        ReadExpect<'a, RunState>,
                        Entities<'a>,
-                       WriteStorage<'a, Position>,
+                       ReadStorage<'a, Position>,
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Monster>,
                        WriteExpect<'a, ParticleBuilder>,
                        WriteStorage<'a, Dancing>,
                        WriteStorage<'a, EffectRequest>,
-                       WriteExpect<'a, RandomNumberGenerator>);
+                       WriteExpect<'a, RandomNumberGenerator>,
+                       WriteStorage<'a, WantsToMove>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, entities, mut pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng) = data;
+        let (map, runstate, entities, pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng, mut wants_to_moves) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
         let mut to_stop: Vec<Entity> = Vec::new();
-        for (entity, mut pos, _monster, mut dancer) in (&entities, &mut pos, &monster, &mut dancers).join() {
+        for (entity, pos, _monster, mut dancer) in (&entities, &pos, &monster, &mut dancers).join() {
             let step = &dancer.steps[dancer.step_idx as usize];
             dancer.step_idx += 1;
             if dancer.step_idx >= dancer.steps.len() as u32 {
@@ -115,8 +121,9 @@ impl<'a> System<'a> for DancingMonsterAI {
                 confused.insert(entity, Confusion{ turns: 3 }).expect("Failed to insert confusion.");
                 to_stop.push(entity);
             } else {
-                pos.x = new_x;
-                pos.y = new_y;
+                wants_to_moves.insert(entity, WantsToMove {
+                    destination: Point::new(new_x, new_y)
+                }).expect("Failed to insert wants move.");
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
                 if let Some(effect) = &step.effect {
                     effect_requests.insert(entity, EffectRequest { effect: effect.clone() }).expect("Failed to inert effect request.");
