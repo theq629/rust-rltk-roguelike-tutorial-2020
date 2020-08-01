@@ -39,10 +39,16 @@ impl<'a> System<'a> for EffectsSystem {
                     for tile in tiles {
                         particle_builder.request(tile.x, tile.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('░'), 100.0);
                     }
+                    let full_reason =
+                        if let Some(effector_name) = &request.effector_name {
+                            format!("{}'s {}", effector_name, reason)
+                        } else {
+                            reason.to_string()
+                        };
                     for target in targets {
                         awestruckness.insert(target, Awestruck {
                             awe: *awe,
-                            reason: reason.to_string()
+                            reason: full_reason.to_string()
                         }).expect("Unable to insert awestruckness.");
                     }
                 }

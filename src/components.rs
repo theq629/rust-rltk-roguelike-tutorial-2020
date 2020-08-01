@@ -192,6 +192,7 @@ pub struct Awe {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct EffectRequest {
     pub effect: Effect,
+    pub effector_name: Option<String>
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]

@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest, CanDoDances, HasArgroedMonsters, WantsToMove};
+use crate::{Map, Viewshed, Position, Monster, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, EffectRequest, CanDoDances, HasArgroedMonsters, WantsToMove, Name};
 
 pub struct MonsterAI {}
 
@@ -97,10 +97,11 @@ impl<'a> System<'a> for DancingMonsterAI {
                        WriteStorage<'a, Dancing>,
                        WriteStorage<'a, EffectRequest>,
                        WriteExpect<'a, RandomNumberGenerator>,
-                       WriteStorage<'a, WantsToMove>);
+                       WriteStorage<'a, WantsToMove>,
+                       ReadStorage<'a, Name>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, entities, pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng, mut wants_to_moves) = data;
+        let (map, runstate, entities, pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng, mut wants_to_moves, names) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
@@ -128,7 +129,10 @@ impl<'a> System<'a> for DancingMonsterAI {
                 }).expect("Failed to insert wants move.");
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
                 if let Some(effect) = &step.effect {
-                    effect_requests.insert(entity, EffectRequest { effect: effect.clone() }).expect("Failed to inert effect request.");
+                    effect_requests.insert(entity, EffectRequest {
+                        effect: effect.clone(),
+                        effector_name: names.get(entity).map(|n| n.name.to_string())
+                    }).expect("Failed to inert effect request.");
                 }
             }
         }
