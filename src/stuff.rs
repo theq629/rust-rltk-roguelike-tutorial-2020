@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Awe};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Awe, liquids::Liquid, SpreadsLiquid};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -71,6 +71,76 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
         .with(CanDoDances{ dances: vec![Dance::HOP] })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn oil_dart(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('/'),
+            fg: RGB::named(rltk::GREY),
+            render_order: 2
+        })
+        .with(Name{ name: "Oil Dart".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(SpreadsLiquid{ liquid: Liquid::OIL })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn oil_balloon(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('!'),
+            fg: RGB::named(rltk::GREY),
+            render_order: 2
+        })
+        .with(Name{ name: "Oil Balloon".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(SpreadsLiquid{ liquid: Liquid::OIL })
+        .with(AreaOfEffect{ radius: 3 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn blood_dart(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('/'),
+            fg: RGB::named(rltk::RED),
+            render_order: 2
+        })
+        .with(Name{ name: "Blood Dart".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(SpreadsLiquid{ liquid: Liquid::BLOOD })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn blood_balloon(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('!'),
+            fg: RGB::named(rltk::RED),
+            render_order: 2
+        })
+        .with(Name{ name: "Blood Balloon".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(SpreadsLiquid{ liquid: Liquid::BLOOD })
+        .with(AreaOfEffect{ radius: 3 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

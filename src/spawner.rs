@@ -41,6 +41,10 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Thrall" => thrall(ecs, x, y),
             "Vampire" => vampire(ecs, x, y),
             "Rabbit" => rabbit(ecs, x, y),
+            "Blood Dart" => blood_dart(ecs, x, y),
+            "Blood Balloon" => blood_balloon(ecs, x, y),
+            "Oil Dart" => oil_dart(ecs, x, y),
+            "Oil Balloon" => oil_balloon(ecs, x, y),
             "Health Potion" => health_potion(ecs, x, y),
             "Fireball Scroll" => fireball_scroll(ecs, x, y),
             "Confusion Scroll" => confusion_scroll(ecs, x, y),
@@ -59,12 +63,9 @@ fn room_table(map_depth: i32) -> RandomTable {
         .add("Rabbit", 50)
         .add("Thrall", 20)
         .add("Vampire", 10)
-        .add("Health Potion", 7)
-        .add("Fireball Scroll", 2 + map_depth)
-        .add("Confusion Scroll", 2 + map_depth)
-        .add("Magic Missile Scroll", 4)
-        .add("Dagger", 3)
-        .add("Shield", 3)
-        .add("Longsword", map_depth - 1)
-        .add("Tower Shield", map_depth - 1)
+        .add("Blood Dart", 50)
+        .add("Blood Balloon", 50)
+        .add("Oil Dart", 50)
+        .add("Oil Balloon", 50)
+        .add("Health Potion", 7 + map_depth)
 }

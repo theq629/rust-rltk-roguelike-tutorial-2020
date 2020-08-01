@@ -28,6 +28,7 @@ impl<'a> System<'a> for AutoMovementSystem {
                 to_remove.push(entity);
             } else {
                 wants_to_moves.insert(entity, WantsToMove {
+                    source: Point::new(pos.x, pos.y),
                     destination: Point::new(x, y)
                 }).expect("Failed to insert wants move.");
             }

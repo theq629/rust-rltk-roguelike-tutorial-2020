@@ -57,6 +57,7 @@ impl<'a> System<'a> for MonsterAI {
                     );
                     if path.success && path.steps.len() > 1 {
                         wants_to_moves.insert(entity, WantsToMove {
+                            source: Point::new(pos.x, pos.y),
                             destination: Point::new(
                                 path.steps[1] as i32 % map.width,
                                 path.steps[1] as i32 / map.width
@@ -122,6 +123,7 @@ impl<'a> System<'a> for DancingMonsterAI {
                 to_stop.push(entity);
             } else {
                 wants_to_moves.insert(entity, WantsToMove {
+                    source: Point::new(pos.x, pos.y),
                     destination: Point::new(new_x, new_y)
                 }).expect("Failed to insert wants move.");
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);

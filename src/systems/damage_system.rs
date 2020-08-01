@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map};
+use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map, liquids::Liquid};
 
 pub struct DamageSystem {}
 
@@ -17,7 +17,7 @@ impl<'a> System<'a> for DamageSystem {
             stats.hp -= damage.amount.iter().sum::<i32>();
             if let Some(pos) = positions.get(entity) {
                 let idx = map.xy_idx(pos.x, pos.y);
-                map.bloodstains.insert(idx);
+                map.stains[idx].insert(Liquid::BLOOD);
             }
         }
 

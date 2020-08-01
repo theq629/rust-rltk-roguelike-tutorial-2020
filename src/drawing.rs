@@ -1,7 +1,7 @@
 use std::cmp::{min, max};
 use specs::prelude::*;
 use rltk::prelude::*;
-use super::{Position, Renderable};
+use super::{Position, Renderable, liquids::Liquid};
 use super::map::{Map, TileType};
 
 pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
@@ -83,8 +83,11 @@ fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map
                 fg = RGB::from_f32(0., 1.0, 1.0);
             }
         }
-        if map.bloodstains.contains(&idx) {
-            bg = RGB::from_f32(0.3, 0., 0.);
+        for liquid in &map.stains[idx] {
+            match liquid {
+                Liquid::BLOOD => { bg = RGB::from_f32(0.3, 0., 0.); }
+                Liquid::OIL => { bg = RGB::from_f32(0.3, 0.3, 0.3); }
+            }
         }
         if !map.visible_tiles[idx] {
             fg = fg.to_greyscale();

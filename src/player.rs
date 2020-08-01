@@ -77,6 +77,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         }
         if !map.blocked[dest_idx] {
             wants_to_moves.insert(entity, WantsToMove {
+                source: Point::new(pos.x, pos.y),
                 destination: Point::new(
                     min(map.width - 1, max(0, pos.x + delta_x)),
                     min(map.height - 1, max(0, pos.y + delta_y))

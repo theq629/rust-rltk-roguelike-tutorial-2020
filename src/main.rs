@@ -5,6 +5,7 @@ use specs::prelude::*;
 mod components;
 pub use components::*;
 mod dancing;
+mod liquids;
 mod map;
 pub use map::*;
 mod player;

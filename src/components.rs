@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
-use crate::{dancing::{Dance, Step}, systems::effects::Effect};
+use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid};
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
@@ -202,11 +202,17 @@ pub struct Awestruck {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct WantsToMove {
+    pub source: Point,
     pub destination: Point
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct HasArgroedMonsters {}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SpreadsLiquid {
+    pub liquid: Liquid
+}
 
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
@@ -246,5 +252,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Awestruck>();
     ecs.register::<HasArgroedMonsters>();
     ecs.register::<WantsToMove>();
+    ecs.register::<SpreadsLiquid>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

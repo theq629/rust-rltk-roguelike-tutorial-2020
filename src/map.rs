@@ -4,6 +4,7 @@ use rltk::{Point, BaseMap, Algorithm2D};
 use specs::prelude::*;
 use super::{Rect}; 
 use serde::{Serialize, Deserialize};
+use crate::{liquids::Liquid};
 
 pub const MAPWIDTH: usize = 80;
 pub const MAPHEIGHT: usize = 43;
@@ -24,7 +25,7 @@ pub struct Map {
     pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
     pub depth: i32,
-    pub bloodstains: HashSet<usize>,
+    pub stains: Vec<HashSet<Liquid>>,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -34,6 +35,14 @@ pub struct Map {
 impl Map {
     pub fn xy_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
+    }
+
+    pub fn point_idx(&self, point: &Point) -> usize {
+        (point.y as usize * self.width as usize) + point.x as usize
+    }
+
+    pub fn point_valid(&self, point: &Point) -> bool {
+        point.x >= 0 && point.x < self.width && point.y >= 0 && point.y < self.height
     }
 
     pub fn new(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> Map {
@@ -47,7 +56,7 @@ impl Map {
             blocked: vec![false; MAPCOUNT],
             tile_content: vec![Vec::new(); MAPCOUNT],
             depth: new_depth,
-            bloodstains: HashSet::new()
+            stains: vec![HashSet::new(); MAPCOUNT],
         };
 
         const MAX_ROOMS: i32 = 30;
