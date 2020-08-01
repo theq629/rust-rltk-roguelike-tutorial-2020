@@ -1,4 +1,5 @@
 use specs::prelude::*;
+use rltk::{Point};
 use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map, liquids::Liquid};
 
 pub struct DamageSystem {}
@@ -31,16 +32,18 @@ pub fn delete_the_dead(ecs: &mut World) {
         let combat_stats = ecs.read_storage::<CombatStats>();
         let players = ecs.read_storage::<Player>();
         let names = ecs.read_storage::<Name>();
+        let positions = ecs.read_storage::<Position>();
         let entities = ecs.entities();
-        let mut log = ecs.write_resource::<GameLog>();
+        let mut gamelog = ecs.write_resource::<GameLog>();
         for (entity, stats) in (&entities, &combat_stats).join() {
             if stats.hp < 1 {
                 let player = players.get(entity);
                 match player {
                     None => {
-                        let victim_name = names.get(entity);
-                        if let Some(victim_name) = victim_name {
-                            log.entries.push(format!("{} is dead", &victim_name.name));
+                        if let Some(victim_name) = names.get(entity) {
+                            if let Some(pos) = positions.get(entity) {
+                                gamelog.at(Point::new(pos.x, pos.y), &format!("{} is dead", &victim_name.name));
+                            }
                         }
                         dead.push(entity)
                     }

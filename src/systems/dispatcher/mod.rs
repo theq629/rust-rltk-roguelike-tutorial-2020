@@ -20,21 +20,25 @@ pub trait UnifiedDispatcher {
 }
 
 construct_dispatcher!(
-    (MonsterAI, "monster_ai", &[]),
-    (DancingMonsterAI, "dancing_monster_ai", &[]),
-    (MovementSystem, "movement", &[]),
-    (MapIndexingSystem, "map_index", &[]),
-    (AutoMovementSystem, "auto_movement", &[]),
-    (MeleeCombatSystem, "melee_combat", &[]),
-    (DamageSystem, "damage", &[]),
-    (AwesomenessSystem, "awesomeness", &[]),
-    (EffectsSystem, "effects", &[]),
-    (ItemCollectionSystem, "item_collection", &[]),
-    (ItemUseSystem, "item_use", &[]),
-    (ItemDropSystem, "item_drop", &[]),
-    (ItemRemoveSystem, "item_remove", &[]),
-    (ParticleSpawnSystem, "particle_spawn", &[]),
-    (VisibilitySystem, "visibility", &[])
+    build [
+        with (MonsterAI, "monster_ai", &[])
+        with (DancingMonsterAI, "dancing_monster_ai", &[])
+        with (MovementSystem, "movement", &[])
+        with (MapIndexingSystem, "map_index", &[])
+        with (AutoMovementSystem, "auto_movement", &[])
+        with (MeleeCombatSystem, "melee_combat", &[])
+        with (DamageSystem, "damage", &[])
+        with (AwesomenessSystem, "awesomeness", &[])
+        with (EffectsSystem, "effects", &[])
+        with (ItemCollectionSystem, "item_collection", &[])
+        with (ItemUseSystem, "item_use", &[])
+        with (ItemDropSystem, "item_drop", &[])
+        with (ItemRemoveSystem, "item_remove", &[])
+        with (ParticleSpawnSystem, "particle_spawn", &[])
+        with (VisibilitySystem, "visibility", &[])
+        barrier
+        with (LogUpdaterSystem, "log_updater", &[])
+    ]
 );
 
 pub fn new() -> Box<dyn UnifiedDispatcher + 'static> {

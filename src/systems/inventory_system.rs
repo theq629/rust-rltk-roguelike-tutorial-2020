@@ -5,23 +5,19 @@ use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, Wan
 pub struct ItemCollectionSystem {}
 
 impl<'a> System<'a> for ItemCollectionSystem {
-    type SystemData = (ReadExpect<'a, Entity>,
-                       WriteExpect<'a, GameLog>,
+    type SystemData = (WriteExpect<'a, GameLog>,
                        WriteStorage<'a, WantsToPickupItem>,
                        WriteStorage<'a, Position>,
                        ReadStorage<'a, Name>,
                        WriteStorage<'a, InBackpack>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names, mut backpack) = data;
+        let (mut gamelog, mut wants_pickup, mut positions, names, mut backpack) = data;
 
         for pickup in wants_pickup.join() {
             positions.remove(pickup.item);
             backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
-
-            if pickup.collected_by == *player_entity {
-                gamelog.entries.push(format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
-            }
+            gamelog.on(pickup.collected_by, &format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
         }
 
         wants_pickup.clear();
@@ -95,9 +91,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
                         if already_equipped.owner == target && already_equipped.slot == target_slot {
                             to_unequip.push(item_entity);
-                            if target == *player_entity {
-                                gamelog.entries.push(format!("You unequip {}.", name.name));
-                            }
+                            gamelog.on(target, &format!("You unequip {}.", name.name));
                         }
                     }
                     for item in to_unequip.iter() {
@@ -107,9 +101,7 @@ impl<'a> System<'a> for ItemUseSystem {
 
                     equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                     backpack.remove(useitem.item);
-                    if target == *player_entity {
-                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
-                    }
+                    gamelog.on(target, &format!("You equip {}.", names.get(useitem.item).unwrap().name));
                 }
             }
 
@@ -121,9 +113,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         let stats = combat_stats.get_mut(*target);
                         if let Some(stats) = stats {
                             stats.hp = i32::min(stats.max_hp, stats.hp + healing_provider.heal_amount);
-                            if entity == *player_entity {
-                                gamelog.entries.push(format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healing_provider.heal_amount));
-                            }
+                            gamelog.on(entity, &format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healing_provider.heal_amount));
                             if let Some(pos) = positions.get(*target) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::to_cp437('♥'), 200.0);
                             }
@@ -138,11 +128,9 @@ impl<'a> System<'a> for ItemUseSystem {
                 Some(damage) => {
                     for mob in targets.iter() {
                         SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
-                        if entity == *player_entity {
-                            let mob_name = names.get(*mob).unwrap();
-                            let item_name = names.get(useitem.item).unwrap();
-                            gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
-                        }
+                        let mob_name = names.get(*mob).unwrap();
+                        let item_name = names.get(useitem.item).unwrap();
+                        gamelog.on(entity, &format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
                         if let Some(pos) = positions.get(*mob) {
                             particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::to_cp437('‼'), 200.0);
                         }
@@ -158,11 +146,9 @@ impl<'a> System<'a> for ItemUseSystem {
                     Some(confusion) => {
                         for mob in targets.iter() {
                             add_confusion.push((*mob, confusion.turns));
-                            if entity == *player_entity {
-                                let mob_name = names.get(*mob).unwrap();
-                                let item_name = names.get(useitem.item).unwrap();
-                                gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
-                            }
+                            let mob_name = names.get(*mob).unwrap();
+                            let item_name = names.get(useitem.item).unwrap();
+                            gamelog.on(entity, &format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
                             if let Some(pos) = positions.get(*mob) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
                             }
@@ -197,8 +183,7 @@ impl<'a> System<'a> for ItemUseSystem {
 pub struct ItemDropSystem {}
 
 impl<'a> System<'a> for ItemDropSystem {
-    type SystemData = (ReadExpect<'a, Entity>,
-                       WriteExpect<'a, GameLog>,
+    type SystemData = (WriteExpect<'a, GameLog>,
                        Entities<'a>,
                        WriteStorage<'a, WantsToDropItem>,
                        ReadStorage<'a, Name>,
@@ -206,7 +191,7 @@ impl<'a> System<'a> for ItemDropSystem {
                        WriteStorage<'a, InBackpack>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions, mut backpack) = data;
+        let (mut gamelog, entities, mut wants_drop, names, mut positions, mut backpack) = data;
 
         for (entity, to_drop) in (&entities, &wants_drop).join() {
             let mut dropper_pos : Position = Position{x: 0, y: 0};
@@ -217,10 +202,7 @@ impl<'a> System<'a> for ItemDropSystem {
             }
             positions.insert(to_drop.item, Position{x: dropper_pos.x, y: dropper_pos.y}).expect("Unable to insert position");
             backpack.remove(to_drop.item);
-
-            if entity == *player_entity {
-                gamelog.entries.push(format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
-            }
+            gamelog.on(entity, &format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
         }
 
         wants_drop.clear();

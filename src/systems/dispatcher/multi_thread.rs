@@ -14,29 +14,30 @@ impl<'a> UnifiedDispatcher for MultiThreadedDispatcher {
 }
 
 macro_rules! construct_dispatcher {
-    (
-        $(
-            (
-                $type:ident,
-                $name:expr,
-                $deps:expr
-            )
-        ),*
-    ) => {
+    ( build [ $($inner:tt)* ] ) => {
         fn new_dispatch() -> Box<dyn UnifiedDispatcher + 'static> {
             use specs::DispatcherBuilder;
 
-            let dispatcher = DispatcherBuilder::new()
-                $(
-                    .with($type{}, $name, $deps)
-                )*
-                .build();
+            let mut dispatcher = DispatcherBuilder::new();
+            expand_dispatcher!(dispatcher, $($inner)*);
 
             let dispatch = MultiThreadedDispatcher{
-                dispatcher: dispatcher
+                dispatcher: dispatcher.build()
             };
 
             return Box::new(dispatch);
         }
+    };
+}
+
+macro_rules! expand_dispatcher {
+    ($w:expr, ) => (());
+    ($dispatcher:ident , with ( $type:ident, $name:expr, $deps:expr ) $($rest:tt)*) => {
+        $dispatcher = $dispatcher.with($type{}, $name, $deps);
+        expand_dispatcher!($dispatcher, $($rest)*);
+    };
+    ($dispatcher:ident , barrier $($rest:tt)*) => {
+        $dispatcher = $dispatcher.with_barrier();
+        expand_dispatcher!($dispatcher, $($rest)*);
     };
 }

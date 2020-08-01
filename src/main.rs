@@ -193,9 +193,10 @@ fn main() -> rltk::BError {
     gs.ecs.insert(rng);
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
     gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
-    gs.ecs.insert(gamelog::GameLog{
-        entries: vec!["Welcome to Rusty Roguelike".to_string()]
-    });
+    gs.ecs.insert(gamelog::PlayerLog::new());
+    let mut log = gamelog::GameLog::new();
+    log.global(&"Welcome to Rusty Roguelike");
+    gs.ecs.insert(log);
     gs.setup_world();
     rltk::main_loop(context, gs)
 }

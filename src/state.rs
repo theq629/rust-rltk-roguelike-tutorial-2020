@@ -78,8 +78,8 @@ impl State {
             vs.dirty = true;
         }
 
-        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.push("You descend to the next level, and take a moment to heal.".to_string());
+        let mut player_log = self.ecs.fetch_mut::<gamelog::PlayerLog>();
+        player_log.insert(&"You descend to the next level, and take a moment to heal.");
         let mut player_health_store = self.ecs.write_storage::<CombatStats>();
         let player_health = player_health_store.get_mut(*player_entity);
         if let Some(player_health) = player_health {

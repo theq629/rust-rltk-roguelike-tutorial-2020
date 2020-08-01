@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe, drawing};
+use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe, drawing};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -19,7 +19,7 @@ pub enum ItemMenuResult {
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
     ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
     draw_stats(ecs, ctx);
-    draw_gamelog(ecs, ctx);
+    draw_log(ecs, ctx);
     draw_tooltips(ecs, ctx);
 }
 
@@ -42,8 +42,8 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     }
 }
 
-fn draw_gamelog(ecs: &World, ctx: &mut Rltk) {
-    let log = ecs.fetch::<GameLog>();
+fn draw_log(ecs: &World, ctx: &mut Rltk) {
+    let log = ecs.fetch::<PlayerLog>();
     let mut y = 44;
     for s in log.entries.iter().rev().take(5) {
         ctx.print(2, y, s);

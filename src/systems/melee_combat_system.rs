@@ -18,7 +18,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        WriteStorage<'a, HasArgroedMonsters>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed) = data;
+        let (entities, mut gamelog, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed) = data;
 
         for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
             has_agroed.insert(entity, HasArgroedMonsters {}).expect("Failed to insert agro.");
@@ -49,9 +49,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defence + defensive_bonus));
                     if damage == 0 {
-                        log.entries.push(format!("{} is unable to hurt {}", &name.name, &target_name.name));
+                        gamelog.on(wants_melee.target, &format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
-                        log.entries.push(format!("{} hits {} for {} hp", &name.name, &target_name.name, damage));
+                        gamelog.on(wants_melee.target, &format!("{} hits {} for {} hp", &name.name, &target_name.name, damage));
                         SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }

@@ -25,7 +25,7 @@ impl<'a> System<'a> for AwesomenessSystem {
         ) = data;
 
         for (entity, mut awe, awestruck) in (&entities, &mut awe, &awestruck).join() {
-            gamelog.entries.push(format!("You are awed by the {} for {}.", awestruck.reason, awestruck.awe));
+            gamelog.on(entity, &format!("You are awed by the {} for {}.", awestruck.reason, awestruck.awe));
             if let Some(pos) = positions.get(entity) {
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('!'), 200.0);
             }

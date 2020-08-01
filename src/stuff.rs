@@ -33,7 +33,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(Monster{})
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
-        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(CombatStats{ max_hp: 20, hp: 20, defence: 1, power: 1 })
         .with(CanDoDances{ dances: vec![Dance::CIRCLE] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
@@ -51,7 +51,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(Monster{})
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
-        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(CombatStats{ max_hp: 10, hp: 10, defence: 1, power: 1 })
         .with(CanDoDances{ dances: vec![Dance::JITTER] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();

@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::GameLog, TileType, Monster, systems::auto_movement_system, Awe, WantsToMove}; 
+use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, Monster, systems::auto_movement_system, Awe, WantsToMove}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -93,7 +93,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();
+    let mut player_log = ecs.fetch_mut::<PlayerLog>();
 
     let mut target_item: Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {
@@ -103,7 +103,7 @@ fn get_item(ecs: &mut World) {
     }
 
     match target_item {
-        None => gamelog.entries.push("There is nothing here to pick up.".to_string()),
+        None => player_log.entries.push("There is nothing here to pick up.".to_string()),
         Some(item) => {
             let mut pickup = ecs.write_storage::<WantsToPickupItem>();
             pickup.insert(*player_entity, WantsToPickupItem{ collected_by: *player_entity, item }).expect("Unable to insert want to pickup");
@@ -118,8 +118,8 @@ fn try_next_level(ecs: &mut World) -> bool {
     if map.tiles[player_idx] == TileType::DownStairs {
         true
     } else {
-        let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.push("There is no way down from here.".to_string());
+        let mut player_log = ecs.fetch_mut::<PlayerLog>();
+        player_log.insert(&"There is no way down from here.");
         false
     }
 }

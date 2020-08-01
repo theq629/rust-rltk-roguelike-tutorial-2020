@@ -23,6 +23,8 @@ mod awesomeness;
 pub use awesomeness::AwesomenessSystem;
 mod movement;
 pub use movement::MovementSystem;
+mod log_updater;
+pub use log_updater::LogUpdaterSystem;
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()
