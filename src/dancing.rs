@@ -16,6 +16,14 @@ pub struct Step {
 }
 
 impl Dance {
+    pub fn name(&self) -> String {
+        match self {
+            Dance::HOP => "hop".to_string(),
+            Dance::JITTER => "jitter".to_string(),
+            Dance::CIRCLE => "circle".to_string()
+        }
+    }
+
     pub fn steps(&self) -> Vec<Step> {
         match self {
             Dance::HOP => vec![

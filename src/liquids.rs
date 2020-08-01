@@ -6,4 +6,13 @@ pub enum Liquid {
     OIL
 }
 
+impl Liquid {
+    pub fn name(self) -> String {
+        match self {
+            Liquid::BLOOD => "blood".to_string(),
+            Liquid::OIL => "oil".to_string()
+        }
+    }
+}
+
 impl Eq for Liquid {}
