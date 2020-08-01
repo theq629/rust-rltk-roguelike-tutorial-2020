@@ -131,7 +131,7 @@ impl<'a> System<'a> for DancingMonsterAI {
                 if let Some(effect) = &step.effect {
                     effect_requests.insert(entity, EffectRequest {
                         effect: effect.clone(),
-                        effector_name: names.get(entity).map(|n| n.name.to_string())
+                        effector_np_pos: names.get(entity).map(|n| n.np_pos.to_string())
                     }).expect("Failed to inert effect request.");
                 }
             }

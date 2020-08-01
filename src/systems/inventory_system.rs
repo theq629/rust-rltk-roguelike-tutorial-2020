@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::{GameLog, capitalize}, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid};
 
 pub struct ItemCollectionSystem {}
 
@@ -17,7 +17,8 @@ impl<'a> System<'a> for ItemCollectionSystem {
         for pickup in wants_pickup.join() {
             positions.remove(pickup.item);
             backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
-            gamelog.on(pickup.collected_by, &format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+            let picker_name = names.get(pickup.collected_by).unwrap();
+            gamelog.on(pickup.collected_by, &format!("{} {} up {}.", capitalize(&picker_name.np), picker_name.verb("picks", "pick"), names.get(pickup.item).unwrap().np));
         }
 
         wants_pickup.clear();
@@ -50,7 +51,7 @@ impl<'a> System<'a> for ItemUseSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (player_entity, mut map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders) = data;
 
-        for (entity, useitem) in (&entities, &wants_use).join() {
+        for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
             let mut targets: Vec<Entity> = Vec::new();
             match useitem.target {
@@ -86,12 +87,13 @@ impl<'a> System<'a> for ItemUseSystem {
                 Some(can_equip) => {
                     let target_slot = can_equip.slot;
                     let target = targets[0];
+                    let target_name = names.get(target).unwrap();
 
                     let mut to_unequip: Vec<Entity> = Vec::new();
                     for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
                         if already_equipped.owner == target && already_equipped.slot == target_slot {
                             to_unequip.push(item_entity);
-                            gamelog.on(target, &format!("You unequip {}.", name.name));
+                            gamelog.on(target, &format!("{} {} {}.", capitalize(&target_name.np), target_name.verb("unequips", "unequip"), name.np));
                         }
                     }
                     for item in to_unequip.iter() {
@@ -101,7 +103,7 @@ impl<'a> System<'a> for ItemUseSystem {
 
                     equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                     backpack.remove(useitem.item);
-                    gamelog.on(target, &format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                    gamelog.on(target, &format!("{} {} {}.", capitalize(&target_name.np), target_name.verb("equips", "equip"), names.get(useitem.item).unwrap().np));
                 }
             }
 
@@ -113,7 +115,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         let stats = combat_stats.get_mut(*target);
                         if let Some(stats) = stats {
                             stats.hp = i32::min(stats.max_hp, stats.hp + healing_provider.heal_amount);
-                            gamelog.on(entity, &format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healing_provider.heal_amount));
+                            gamelog.on(entity, &format!("{} {} {}, healing {} hp.", capitalize(&name.np), name.verb("drinks", "drink"), names.get(useitem.item).unwrap().np, healing_provider.heal_amount));
                             if let Some(pos) = positions.get(*target) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::to_cp437('♥'), 200.0);
                             }
@@ -130,7 +132,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
                         let mob_name = names.get(*mob).unwrap();
                         let item_name = names.get(useitem.item).unwrap();
-                        gamelog.on(entity, &format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                        gamelog.on(entity, &format!("{} {} {} on {}, inflicting {} hp.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np, damage.damage));
                         if let Some(pos) = positions.get(*mob) {
                             particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::to_cp437('‼'), 200.0);
                         }
@@ -148,7 +150,7 @@ impl<'a> System<'a> for ItemUseSystem {
                             add_confusion.push((*mob, confusion.turns));
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
-                            gamelog.on(entity, &format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                            gamelog.on(entity, &format!("{} {} {} on {}, confusing them.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np));
                             if let Some(pos) = positions.get(*mob) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
                             }
@@ -193,7 +195,7 @@ impl<'a> System<'a> for ItemDropSystem {
     fn run(&mut self, data : Self::SystemData) {
         let (mut gamelog, entities, mut wants_drop, names, mut positions, mut backpack) = data;
 
-        for (entity, to_drop) in (&entities, &wants_drop).join() {
+        for (entity, to_drop, name) in (&entities, &wants_drop, &names).join() {
             let mut dropper_pos : Position = Position{x: 0, y: 0};
             {
                 let dropped_pos = positions.get(entity).unwrap();
@@ -202,7 +204,7 @@ impl<'a> System<'a> for ItemDropSystem {
             }
             positions.insert(to_drop.item, Position{x: dropper_pos.x, y: dropper_pos.y}).expect("Unable to insert position");
             backpack.remove(to_drop.item);
-            gamelog.on(entity, &format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
+            gamelog.on(entity, &format!("{} {} {}.", capitalize(&name.np), name.verb("drops", "drop"), names.get(to_drop.item).unwrap().np));
         }
 
         wants_drop.clear();

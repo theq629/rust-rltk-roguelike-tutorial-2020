@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
+use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::{GameLog, capitalize}, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
 
 pub struct MeleeCombatSystem {}
 
@@ -49,9 +49,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defence + defensive_bonus));
                     if damage == 0 {
-                        gamelog.on(wants_melee.target, &format!("{} is unable to hurt {}", &name.name, &target_name.name));
+                        gamelog.on(wants_melee.target, &format!("{} {} unable to hurt {}", capitalize(&name.np), name.verb("is", "are"), target_name.np));
                     } else {
-                        gamelog.on(wants_melee.target, &format!("{} hits {} for {} hp", &name.name, &target_name.name, damage));
+                        gamelog.on(wants_melee.target, &format!("{} {} {} for {} hp", capitalize(&name.np), name.verb("hits", "hit"), target_name.np, damage));
                         SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }

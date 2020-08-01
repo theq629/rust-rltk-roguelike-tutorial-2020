@@ -40,8 +40,8 @@ impl<'a> System<'a> for EffectsSystem {
                         particle_builder.request(tile.x, tile.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('░'), 100.0);
                     }
                     let full_reason =
-                        if let Some(effector_name) = &request.effector_name {
-                            format!("{}'s {}", effector_name, reason)
+                        if let Some(effector_np_pos) = &request.effector_np_pos {
+                            format!("{} {}", effector_np_pos, reason)
                         } else {
                             reason.to_string()
                         };

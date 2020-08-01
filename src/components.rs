@@ -35,7 +35,29 @@ pub struct Monster {}
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Name {
-    pub name: String
+    pub name: String,
+    pub np: String,
+    pub np_pos: String,
+    pub verb_plural: bool
+}
+
+impl Name {
+    pub fn new_regular<S: ToString>(name: S) -> Self {
+        Name {
+            name: name.to_string(),
+            np: format!("the {}", name.to_string()),
+            np_pos: format!("the {}'s", name.to_string()),
+            verb_plural: false
+        }
+    }
+
+    pub fn verb<S>(&self, singular: S, plural: S) -> S {
+        if self.verb_plural {
+            plural
+        } else {
+            singular
+        }
+    }
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
@@ -189,10 +211,10 @@ pub struct Awe {
     pub awe: i32
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct EffectRequest {
     pub effect: Effect,
-    pub effector_name: Option<String>
+    pub effector_np_pos: Option<String>
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]

@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map, liquids::Liquid};
+use crate::{CombatStats, SufferDamage, Player, Name, gamelog::{GameLog, capitalize}, RunState, Position, Map, liquids::Liquid};
 
 pub struct DamageSystem {}
 
@@ -42,7 +42,7 @@ pub fn delete_the_dead(ecs: &mut World) {
                     None => {
                         if let Some(victim_name) = names.get(entity) {
                             if let Some(pos) = positions.get(entity) {
-                                gamelog.at(Point::new(pos.x, pos.y), &format!("{} is dead", &victim_name.name));
+                                gamelog.at(Point::new(pos.x, pos.y), &format!("{} {} dead", capitalize(&victim_name.np), victim_name.verb("is", "are")));
                             }
                         }
                         dead.push(entity)
