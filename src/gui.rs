@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe};
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe, drawing};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -175,34 +175,38 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
 
     ctx.print_color(5, 0, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Select Target:");
 
-    let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
-    if let Some(visible) = visible {
-        for idx in visible.visible_tiles.iter() {
-            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
-            if distance <= range as f32 {
-                ctx.set_bg(idx.x, idx.y, RGB::named(rltk::BLUE));
-                available_cells.push(idx);
-            }
-        }
-    } else {
-        return (ItemMenuResult::Cancel, None);
+    let available_world_cells =
+        if let Some(visible) = visible {
+            visible.visible_tiles.iter().filter(|tile| {
+                let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, **tile);
+                distance <= range as f32
+            }).map(|t| t.clone()).collect()
+        } else {
+            return (ItemMenuResult::Cancel, None);
+        };
+    let available_screen_cells = drawing::world_to_screen_points(&available_world_cells, &gs.ecs, ctx);
+
+    for pos in available_screen_cells.iter() {
+        ctx.set_bg(pos.x, pos.y, RGB::named(rltk::BLUE));
     }
 
-    let mouse_pos = ctx.mouse_pos();
+    let (mouse_x, mouse_y) = ctx.mouse_pos();
+    let world_mouse_pos = drawing::screen_to_world_point(Point::new(mouse_x, mouse_y), &gs.ecs, ctx);
     let mut valid_target = false;
-    for idx in available_cells.iter() {
-        if idx.x == mouse_pos.0 && idx.y == mouse_pos.1 {
+    for tile in available_world_cells.iter() {
+        if tile.x == world_mouse_pos.x && tile.y == world_mouse_pos.y {
             valid_target = true;
+            break;
         }
     }
     if valid_target {
-        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
+        ctx.set_bg(mouse_x, mouse_y, RGB::named(rltk::CYAN));
         if ctx.left_click {
-            return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0, mouse_pos.1)));
+            return (ItemMenuResult::Selected, Some(world_mouse_pos));
         }
     } else {
-        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::RED));
+        ctx.set_bg(mouse_x, mouse_y, RGB::named(rltk::RED));
         if ctx.left_click {
             return (ItemMenuResult::Cancel, None);
         }

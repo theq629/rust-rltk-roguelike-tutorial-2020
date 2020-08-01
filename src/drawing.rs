@@ -42,6 +42,26 @@ pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
     }
 }
 
+pub fn world_to_screen_points(points: &Vec<Point>, ecs: &World, ctx: &mut Rltk) -> Vec<Point> {
+    let view_centre = ecs.fetch::<Point>();
+
+    let (screen_width, screen_height) = ctx.get_char_size();
+    let world_min_x = max(0, view_centre.x - (screen_width / 2) as i32);
+    let world_min_y = max(0, view_centre.y - (screen_height / 2) as i32);
+
+    points.iter().map(|p| Point::new(p.x - world_min_x, p.y - world_min_y)).collect()
+}
+
+pub fn screen_to_world_point(point: Point, ecs: &World, ctx: &mut Rltk) -> Point {
+    let view_centre = ecs.fetch::<Point>();
+
+    let (screen_width, screen_height) = ctx.get_char_size();
+    let world_min_x = max(0, view_centre.x - (screen_width / 2) as i32);
+    let world_min_y = max(0, view_centre.y - (screen_height / 2) as i32);
+
+    Point::new(point.x + world_min_x, point.y + world_min_y)
+}
+
 fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map, ctx: &mut Rltk) {
     let idx = map.xy_idx(world_x, world_y);
     let glyph;
