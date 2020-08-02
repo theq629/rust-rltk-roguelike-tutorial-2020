@@ -226,7 +226,7 @@ fn main() -> rltk::BError {
     gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
     gs.ecs.insert(gamelog::PlayerLog::new());
     let mut log = gamelog::GameLog::new();
-    log.global(&"Welcome to Rusty Roguelike");
+    log.global(&"Welcome to the moon.");
     gs.ecs.insert(log);
     gs.setup_world();
     rltk::main_loop(context, gs)
