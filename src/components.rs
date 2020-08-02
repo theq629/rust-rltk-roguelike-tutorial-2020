@@ -38,7 +38,8 @@ pub struct Name {
     pub name: String,
     pub np: String,
     pub np_pos: String,
-    pub verb_plural: bool
+    pub pronoun_pos: String,
+    pub verb_plural: bool,
 }
 
 impl Name {
@@ -47,6 +48,7 @@ impl Name {
             name: name.to_string(),
             np: format!("the {}", name.to_string()),
             np_pos: format!("the {}'s", name.to_string()),
+            pronoun_pos: "their".to_string(),
             verb_plural: false
         }
     }
@@ -201,6 +203,7 @@ pub struct CanDoDances {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Dancing {
+    pub expect_pos: Point,
     pub steps: Vec<Step>,
     pub step_idx: u32
 }

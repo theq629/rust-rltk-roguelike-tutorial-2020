@@ -78,6 +78,7 @@ impl<'a> System<'a> for MonsterAI {
                         let dance = &can.dances[i];
                         gamelog.on(entity, &format!("{} {} the {} dance.", capitalize(&name.np), name.verb("starts", "start"), dance.name()));
                         dancers.insert(entity, Dancing {
+                            expect_pos: Point::new(pos.x, pos.y),
                             steps: dance.steps(),
                             step_idx: 0
                         }).expect("Failed to insert dancing.");
@@ -96,7 +97,6 @@ impl<'a> System<'a> for DancingMonsterAI {
                        WriteExpect<'a, GameLog>,
                        Entities<'a>,
                        ReadStorage<'a, Position>,
-                       WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Monster>,
                        WriteExpect<'a, ParticleBuilder>,
                        WriteStorage<'a, Dancing>,
@@ -106,12 +106,17 @@ impl<'a> System<'a> for DancingMonsterAI {
                        ReadStorage<'a, Name>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, mut gamelog, entities, pos, mut confused, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng, mut wants_to_moves, names) = data;
+        let (map, runstate, mut gamelog, entities, pos, monster, mut particle_builder, mut dancers, mut effect_requests, mut rng, mut wants_to_moves, names) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, _monster, mut dancer, name) in (&entities, &pos, &monster, &mut dancers, &names).join() {
+            if pos.x != dancer.expect_pos.x || pos.y != dancer.expect_pos.y {
+                gamelog.on(entity, &format!("{} {} {} dance.", capitalize(&name.np), name.verb("fails", "fail"), name.pronoun_pos));
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
+                to_stop.push(entity);
+            }
             let step = &dancer.steps[dancer.step_idx as usize];
             dancer.step_idx += 1;
             if dancer.step_idx >= dancer.steps.len() as u32 {
@@ -124,15 +129,13 @@ impl<'a> System<'a> for DancingMonsterAI {
             }
             let new_x = pos.x + step.direction.x;
             let new_y = pos.y + step.direction.y;
+            let new_pos = Point::new(new_x, new_y);
             let new_idx = map.xy_idx(new_x, new_y);
-            if map.blocked[new_idx] {
-                gamelog.on(entity, &format!("{} {} into something and {} dancing.", capitalize(&name.np), name.verb("runs", "run"), name.verb("stops", "stop")));
-                confused.insert(entity, Confusion{ turns: 3 }).expect("Failed to insert confusion.");
-                to_stop.push(entity);
-            } else {
+            dancer.expect_pos = new_pos;
+            if !map.blocked[new_idx] {
                 wants_to_moves.insert(entity, WantsToMove {
                     source: Point::new(pos.x, pos.y),
-                    destination: Point::new(new_x, new_y)
+                    destination: new_pos
                 }).expect("Failed to insert wants move.");
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
                 if let Some(effect) = &step.effect {

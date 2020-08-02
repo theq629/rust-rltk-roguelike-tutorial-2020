@@ -18,6 +18,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             name: "player".to_string(),
             np: "you".to_string(),
             np_pos: "your".to_string(),
+            pronoun_pos: "your".to_string(),
             verb_plural: true
         })
         .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
