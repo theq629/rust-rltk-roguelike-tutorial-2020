@@ -1,6 +1,6 @@
 use specs::prelude::*;
-use rltk::{Point};
-use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise};
+use rltk::{Point, RandomNumberGenerator};
+use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances};
 
 pub struct StartDancingSystem {}
 
@@ -52,6 +52,7 @@ pub struct DancingMovementSystem {}
 impl<'a> System<'a> for DancingMovementSystem {
     type SystemData = (ReadExpect<'a, Map>,
                        ReadExpect<'a, RunState>,
+                       WriteExpect<'a, RandomNumberGenerator>,
                        Entities<'a>,
                        ReadStorage<'a, Position>,
                        ReadStorage<'a, Player>,
@@ -60,10 +61,11 @@ impl<'a> System<'a> for DancingMovementSystem {
                        WriteStorage<'a, Dancing>,
                        WriteStorage<'a, EffectRequest>,
                        WriteStorage<'a, WantsToMove>,
-                       ReadStorage<'a, Name>);
+                       ReadStorage<'a, Name>,
+                       ReadStorage<'a, CanDoDances>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names) = data;
+        let (map, runstate, mut rng, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances) = data;
 
         for (entity, pos, mut dancer) in (&entities, &pos, &mut dancers).join() {
             if *runstate != RunState::PlayerTurn {
@@ -91,8 +93,14 @@ impl<'a> System<'a> for DancingMovementSystem {
                 }).expect("Failed to insert wants move.");
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('~'), 50.0);
                 if let Some(effect) = &step.effect {
+                    let mut reason = "dancing".to_string();
+                    if let Some(can_dance) = can_do_dances.get(entity) {
+                        let i = rng.range(0, can_dance.descriptors.len());
+                        reason = format!("{} {}", can_dance.descriptors[i], reason);
+                    }
                     effect_requests.insert(entity, EffectRequest {
                         effect: effect.clone(),
+                        reason: reason,
                         effector_np_pos: names.get(entity).map(|n| n.np_pos.to_string())
                     }).expect("Failed to inert effect request.");
                 }

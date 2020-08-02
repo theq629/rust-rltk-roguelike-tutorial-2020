@@ -24,6 +24,10 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .with(InFaction{ faction: Faction::PLAYER })
         .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
         .with(Poise{ max_poise: 10, poise: 10 })
+        .with(CanDoDances{
+            dances: vec![Dance::HOP, Dance::JITTER, Dance::CIRCLE],
+            descriptors: vec!["cool", "awesome", "impressive", "elegant"].iter().map(|s| s.to_string()).collect()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
@@ -43,7 +47,10 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ max_hp: 20, hp: 20, defence: 1, power: 1 })
         .with(Poise{ max_poise: 10, poise: 10 })
-        .with(CanDoDances{ dances: vec![Dance::CIRCLE] })
+        .with(CanDoDances{
+            dances: vec![Dance::CIRCLE],
+            descriptors: vec!["cool", "awesome", "creepy", "scary", "bloodthirsty", "elegant"].iter().map(|s| s.to_string()).collect()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -63,7 +70,10 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ max_hp: 10, hp: 10, defence: 1, power: 1 })
         .with(Poise{ max_poise: 5, poise: 5 })
-        .with(CanDoDances{ dances: vec![Dance::JITTER] })
+        .with(CanDoDances{
+            dances: vec![Dance::JITTER],
+            descriptors: vec!["jittery", "clunky", "heavy", "solid"].iter().map(|s| s.to_string()).collect()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -83,7 +93,10 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
         .with(Poise{ max_poise: 1, poise: 1 })
-        .with(CanDoDances{ dances: vec![Dance::HOP] })
+        .with(CanDoDances{
+            dances: vec![Dance::HOP],
+            descriptors: vec!["cute", "nimble", "furry", "hoppy"].iter().map(|s| s.to_string()).collect()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

@@ -198,7 +198,8 @@ pub struct MovingAutomatically {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct CanDoDances {
-    pub dances: Vec<Dance>
+    pub dances: Vec<Dance>,
+    pub descriptors: Vec<String>
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
@@ -218,6 +219,7 @@ pub struct Poise {
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct EffectRequest {
     pub effect: Effect,
+    pub reason: String,
     pub effector_np_pos: Option<String>
 }
 

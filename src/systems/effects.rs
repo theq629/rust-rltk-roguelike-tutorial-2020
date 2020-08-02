@@ -7,7 +7,6 @@ use crate::{EffectRequest, Position, map::Map, Awestruck, InFaction};
 pub enum Effect {
     AWESOMENESS {
         poise: i32,
-        reason: String,
         range: i32
     }
 }
@@ -36,13 +35,13 @@ impl<'a> System<'a> for EffectsSystem {
 
         for (entity, pos, request) in (&entities, &positions, &requests).join() {
             match &request.effect {
-                Effect::AWESOMENESS { poise, reason, range } => {
+                Effect::AWESOMENESS { poise, range } => {
                     let (_, targets) = get_targets(Point::new(pos.x, pos.y), *range, &map);
                     let full_reason =
                         if let Some(effector_np_pos) = &request.effector_np_pos {
-                            format!("{} {}", effector_np_pos, reason)
+                            format!("{} {}", effector_np_pos, request.reason)
                         } else {
-                            reason.to_string()
+                            request.reason.to_string()
                         };
                     let entity_faction = factions.get(entity);
                     for target in targets {
