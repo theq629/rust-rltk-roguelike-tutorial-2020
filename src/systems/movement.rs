@@ -54,7 +54,8 @@ impl<'a> System<'a> for MovementSystem {
                         pos.x + rng.roll_dice(1, 3) - 2,
                         pos.y + rng.roll_dice(1, 3) - 2
                     );
-                    if map.point_valid(&rand_dest) {
+                    let rand_dest_idx = map.point_idx(&rand_dest);
+                    if map.point_valid(&rand_dest) && !map.blocked[rand_dest_idx] {
                         rand_dest
                     } else {
                         Point::new(pos.x, pos.y)
