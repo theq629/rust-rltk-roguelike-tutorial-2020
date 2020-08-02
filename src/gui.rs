@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize};
+use super::{Health, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -28,17 +28,24 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     let depth = format!("Depth: {}", map.depth);
     ctx.print_color(2, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &depth);
 
-    let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
-    for (_player, stats) in (&players, &combat_stats).join() {
-        let health = format!(" Health: {} / {} ", stats.hp, stats.max_hp);
+
+    let health = ecs.read_storage::<Health>();
+    for (_player, health) in (&players, &health).join() {
+        let health = format!(" Health: {} / {} ", health.health, health.max_health);
         ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
+    }
+
+    let stamina = ecs.read_storage::<Stamina>();
+    for (_player, stamina) in (&players, &stamina).join() {
+        let s = format!(" Stamina: {} / {} ", stamina.stamina, stamina.max_stamina);
+        ctx.print_color(28, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 
     let poise = ecs.read_storage::<Poise>();
     for (_player, poise) in (&players, &poise).join() {
         let s = format!(" Poise: {} / {} ", poise.poise, poise.max_poise);
-        ctx.print_color(28, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
+        ctx.print_color(45, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 }
 

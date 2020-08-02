@@ -66,9 +66,13 @@ impl Name {
 pub struct BlocksTile {}
 
 #[derive(Component, ConvertSaveload, Clone)]
+pub struct Health {
+    pub max_health: i32,
+    pub health: i32
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct CombatStats {
-    pub max_hp: i32,
-    pub hp: i32,
     pub defence: i32,
     pub power: i32
 }
@@ -254,6 +258,12 @@ pub struct InFaction {
     pub faction: Faction
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct Stamina {
+    pub stamina: i32,
+    pub max_stamina: i32
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -262,6 +272,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Monster>();
     ecs.register::<Name>();
     ecs.register::<BlocksTile>();
+    ecs.register::<Health>();
     ecs.register::<CombatStats>();
     ecs.register::<WantsToMelee>();
     ecs.register::<SufferDamage>();
@@ -295,5 +306,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<SpreadsLiquid>();
     ecs.register::<WantsToDance>();
     ecs.register::<InFaction>();
+    ecs.register::<Stamina>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

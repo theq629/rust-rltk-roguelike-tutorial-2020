@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, text::capitalize, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
+use crate::{CombatStats, Health, WantsToMelee, Name, SufferDamage, gamelog::GameLog, text::capitalize, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters, Stamina};
 
 pub struct MeleeCombatSystem {}
 
@@ -9,6 +9,8 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        WriteStorage<'a, WantsToMelee>,
                        ReadStorage<'a, Name>,
                        ReadStorage<'a, CombatStats>,
+                       ReadStorage<'a, Health>,
+                       WriteStorage<'a, Stamina>,
                        WriteStorage<'a, SufferDamage>,
                        ReadStorage<'a, MeleePowerBonus>,
                        ReadStorage<'a, DefenceBonus>,
@@ -18,12 +20,12 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        WriteStorage<'a, HasArgroedMonsters>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut gamelog, mut wants_melee, names, combat_stats, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed) = data;
+        let (entities, mut gamelog, mut wants_melee, names, combat_stats, health, mut stamina, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed) = data;
 
-        for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
+        for (entity, wants_melee, health, mut stamina, name, stats) in (&entities, &wants_melee, &health, &mut stamina, &names, &combat_stats).join() {
             has_agroed.insert(entity, HasArgroedMonsters {}).expect("Failed to insert agro.");
 
-            if stats.hp > 0 {
+            if health.health > 0 && stamina.stamina > 0 {
                 let mut offensive_bonus = 0;
                 for (_item_entity, power_bonus, equipped_by) in (&entities, &melee_power_bonuses, &equipped).join() {
                     if equipped_by.owner == entity {
@@ -31,8 +33,10 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     }
                 }
 
+                stamina.stamina -= 1;
+
                 let target_stats = combat_stats.get(wants_melee.target).unwrap();
-                if target_stats.hp > 0 {
+                if health.health > 0 {
                     let target_name = names.get(wants_melee.target).unwrap();
 
                     let mut defensive_bonus = 0;
@@ -51,7 +55,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     if damage == 0 {
                         gamelog.on(wants_melee.target, &format!("{} {} unable to hurt {}", capitalize(&name.np), name.verb("is", "are"), target_name.np));
                     } else {
-                        gamelog.on(wants_melee.target, &format!("{} {} {} for {} hp", capitalize(&name.np), name.verb("hits", "hit"), target_name.np, damage));
+                        gamelog.on(wants_melee.target, &format!("{} {} {} for {} health", capitalize(&name.np), name.verb("hits", "hit"), target_name.np, damage));
                         SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }

@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Viewshed, Map, RunState, CombatStats, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, Monster, systems::auto_movement_system, Poise, WantsToMove}; 
+use super::{state::State, Position, Player, Viewshed, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, Monster, systems::auto_movement_system, Poise, WantsToMove, Stamina}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -27,9 +27,12 @@ fn skip_turn(ecs: &mut World) -> RunState {
     }
 
     if can_heal {
-        let mut health_components = ecs.write_storage::<CombatStats>();
-        let player_hp = health_components.get_mut(*player_entity).unwrap();
-        player_hp.hp = i32::min(player_hp.hp + 1, player_hp.max_hp);
+        let mut health_components = ecs.write_storage::<Health>();
+        let player_health = health_components.get_mut(*player_entity).unwrap();
+        player_health.health = i32::min(player_health.health + 1, player_health.max_health);
+        let mut stamina_components = ecs.write_storage::<Stamina>();
+        let player_stamina = stamina_components.get_mut(*player_entity).unwrap();
+        player_stamina.stamina = i32::min(player_stamina.stamina + 1, player_stamina.max_stamina);
         let mut poise_components = ecs.write_storage::<Poise>();
         let player_poise = poise_components.get_mut(*player_entity).unwrap();
         player_poise.poise = i32::min(player_poise.poise + 1, player_poise.max_poise);
@@ -57,7 +60,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 
     let positions = ecs.read_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
-    let combat_stats = ecs.read_storage::<CombatStats>();
+    let health = ecs.read_storage::<Health>();
     let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
     let mut wants_to_moves = ecs.write_storage::<WantsToMove>();
     let entities = ecs.entities();
@@ -66,7 +69,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     for (_player, pos, entity) in (&mut players, &positions, &entities).join() {
         let dest_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
         for potential_target in map.tile_content[dest_idx].iter() {
-            let target = combat_stats.get(*potential_target);
+            let target = health.get(*potential_target);
             match target {
                 None => {}
                 Some(_t) => {

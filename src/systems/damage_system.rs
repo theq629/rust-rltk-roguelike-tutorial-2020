@@ -1,21 +1,23 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, text::capitalize, RunState, Position, Map, liquids::Liquid};
+use crate::{Health, SufferDamage, Player, Name, gamelog::GameLog, text::capitalize, RunState, Position, Map, liquids::Liquid, Stamina};
 
 pub struct DamageSystem {}
 
 impl<'a> System<'a> for DamageSystem {
-    type SystemData = (WriteStorage<'a, CombatStats>,
+    type SystemData = (WriteStorage<'a, Health>,
+                       WriteStorage<'a, Stamina>,
                        WriteStorage<'a, SufferDamage>,
                        ReadStorage<'a, Position>,
                        WriteExpect<'a, Map>,
                        Entities<'a>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut stats, mut damage, positions, mut map, entities) = data;
+        let (mut health, mut stamina, mut damage, positions, mut map, entities) = data;
 
-        for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
-            stats.hp -= damage.amount.iter().sum::<i32>();
+        for (entity, mut health, mut stamina, damage) in (&entities, &mut health, &mut stamina, &damage).join() {
+            health.health -= damage.amount.iter().sum::<i32>();
+            stamina.stamina = i32::max(0, stamina.stamina - 1);
             if let Some(pos) = positions.get(entity) {
                 let idx = map.xy_idx(pos.x, pos.y);
                 map.stains[idx].insert(Liquid::BLOOD);
@@ -29,14 +31,14 @@ impl<'a> System<'a> for DamageSystem {
 pub fn delete_the_dead(ecs: &mut World) {
     let mut dead: Vec<Entity> = Vec::new();
     {
-        let combat_stats = ecs.read_storage::<CombatStats>();
+        let health = ecs.read_storage::<Health>();
         let players = ecs.read_storage::<Player>();
         let names = ecs.read_storage::<Name>();
         let positions = ecs.read_storage::<Position>();
         let entities = ecs.entities();
         let mut gamelog = ecs.write_resource::<GameLog>();
-        for (entity, stats) in (&entities, &combat_stats).join() {
-            if stats.hp < 1 {
+        for (entity, health) in (&entities, &health).join() {
+            if health.health < 1 {
                 let player = players.get(entity);
                 match player {
                     None => {

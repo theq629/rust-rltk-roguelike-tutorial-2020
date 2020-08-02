@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances};
+use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances, Stamina};
 
 pub struct StartDancingSystem {}
 
@@ -12,6 +12,7 @@ impl<'a> System<'a> for StartDancingSystem {
         WriteStorage<'a, WantsToDance>,
         ReadStorage<'a, Name>,
         WriteStorage<'a, Dancing>,
+        ReadStorage<'a, Stamina>,
         ReadStorage<'a, Poise>
     );
 
@@ -23,10 +24,17 @@ impl<'a> System<'a> for StartDancingSystem {
             mut want_to_dancers,
             names,
             mut dancers,
+            stamina,
             poise
         ) = data;
 
         for (entity, pos, want_dance, name) in (&entities, &positions, &want_to_dancers, &names).join() {
+            if let Some(stamina) = stamina.get(entity) {
+                if stamina.stamina <= 0 {
+                    gamelog.on(entity, &format!("{} {} too tired to dance.", capitalize(&name.np), name.verb("is", "are")));
+                    continue;
+                }
+            }
             if let Some(poise) = poise.get(entity) {
                 if poise.poise <= 0 {
                     gamelog.on(entity, &format!("{} {} too intimidated to dance.", capitalize(&name.np), name.verb("is", "are")));
@@ -53,6 +61,7 @@ impl<'a> System<'a> for DancingMovementSystem {
     type SystemData = (ReadExpect<'a, Map>,
                        ReadExpect<'a, RunState>,
                        WriteExpect<'a, RandomNumberGenerator>,
+                       WriteExpect<'a, GameLog>,
                        Entities<'a>,
                        ReadStorage<'a, Position>,
                        ReadStorage<'a, Player>,
@@ -62,12 +71,14 @@ impl<'a> System<'a> for DancingMovementSystem {
                        WriteStorage<'a, EffectRequest>,
                        WriteStorage<'a, WantsToMove>,
                        ReadStorage<'a, Name>,
-                       ReadStorage<'a, CanDoDances>);
+                       ReadStorage<'a, CanDoDances>,
+                       WriteStorage<'a, Stamina>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, mut rng, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances) = data;
+        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina) = data;
 
-        for (entity, pos, mut dancer) in (&entities, &pos, &mut dancers).join() {
+        let mut to_stop: Vec<Entity> = Vec::new();
+        for (entity, pos, mut dancer, mut stamina, name) in (&entities, &pos, &mut dancers, &mut stamina, &names).join() {
             if *runstate != RunState::PlayerTurn {
                 if let None = players.get(entity) {
                     continue;
@@ -76,6 +87,15 @@ impl<'a> System<'a> for DancingMovementSystem {
                 if let None = monsters.get(entity) {
                     continue;
                 }
+            }
+
+            if stamina.stamina <= 0 {
+                gamelog.on(entity, &format!("{} {} too tired to continue dancing.", capitalize(&name.np), name.verb("is", "are")));
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
+                to_stop.push(entity);
+                continue;
+            } else {
+                stamina.stamina -= 1;
             }
 
             let step = &dancer.steps[dancer.step_idx as usize];
@@ -105,6 +125,10 @@ impl<'a> System<'a> for DancingMovementSystem {
                     }).expect("Failed to inert effect request.");
                 }
             }
+        }
+
+        for entity in to_stop {
+            dancers.remove(entity);
         }
     }
 }

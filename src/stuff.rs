@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction};
+use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -22,7 +22,9 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             verb_plural: true
         })
         .with(InFaction{ faction: Faction::PLAYER })
-        .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
+        .with(CombatStats{ defence: 2, power: 5 })
+        .with(Health{ max_health: 30, health: 30 })
+        .with(Stamina{ max_stamina: 10, stamina: 10 })
         .with(Poise{ max_poise: 10, poise: 10 })
         .with(CanDoDances{
             dances: vec![Dance::HOP, Dance::JITTER, Dance::CIRCLE],
@@ -45,7 +47,9 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
-        .with(CombatStats{ max_hp: 20, hp: 20, defence: 1, power: 1 })
+        .with(CombatStats{ defence: 1, power: 1 })
+        .with(Health{ max_health: 20, health: 20 })
+        .with(Stamina{ max_stamina: 10, stamina: 10 })
         .with(Poise{ max_poise: 10, poise: 10 })
         .with(CanDoDances{
             dances: vec![Dance::CIRCLE],
@@ -68,7 +72,9 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
-        .with(CombatStats{ max_hp: 10, hp: 10, defence: 1, power: 1 })
+        .with(CombatStats{ defence: 1, power: 1 })
+        .with(Health{ max_health: 10, health: 10 })
+        .with(Stamina{ max_stamina: 5, stamina: 5 })
         .with(Poise{ max_poise: 5, poise: 5 })
         .with(CanDoDances{
             dances: vec![Dance::JITTER],
@@ -91,7 +97,9 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
-        .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(CombatStats{ defence: 1, power: 1 })
+        .with(Health{ max_health: 3, health: 3 })
+        .with(Stamina{ max_stamina: 5, stamina: 5 })
         .with(Poise{ max_poise: 1, poise: 1 })
         .with(CanDoDances{
             dances: vec![Dance::HOP],

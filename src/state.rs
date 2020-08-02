@@ -80,10 +80,10 @@ impl State {
 
         let mut player_log = self.ecs.fetch_mut::<gamelog::PlayerLog>();
         player_log.insert(&"You descend to the next level, and take a moment to heal.");
-        let mut player_health_store = self.ecs.write_storage::<CombatStats>();
+        let mut player_health_store = self.ecs.write_storage::<Health>();
         let player_health = player_health_store.get_mut(*player_entity);
         if let Some(player_health) = player_health {
-            player_health.hp = i32::max(player_health.hp, player_health.max_hp / 2);
+            player_health.health = i32::max(player_health.health, player_health.max_health / 2);
         }
     }
 

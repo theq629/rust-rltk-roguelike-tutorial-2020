@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, CombatStats, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid};
 
 pub struct ItemCollectionSystem {}
 
@@ -38,7 +38,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, ProvidesHealing>,
                        ReadStorage<'a, InflictsDamage>,
                        ReadStorage<'a, AreaOfEffect>,
-                       WriteStorage<'a, CombatStats>,
+                       WriteStorage<'a, Health>,
                        WriteStorage<'a, SufferDamage>,
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Equippable>,
@@ -49,7 +49,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, SpreadsLiquid>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut combat_stats, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders) = data;
+        let (player_entity, mut map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders) = data;
 
         for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
@@ -112,9 +112,9 @@ impl<'a> System<'a> for ItemUseSystem {
                 None => {}
                 Some(healing_provider) => {
                     for target in targets.iter() {
-                        let stats = combat_stats.get_mut(*target);
-                        if let Some(stats) = stats {
-                            stats.hp = i32::min(stats.max_hp, stats.hp + healing_provider.heal_amount);
+                        let health = health.get_mut(*target);
+                        if let Some(health) = health {
+                            health.health = i32::min(health.max_health, health.health + healing_provider.heal_amount);
                             gamelog.on(entity, &format!("{} {} {}, healing {} hp.", capitalize(&name.np), name.verb("drinks", "drink"), names.get(useitem.item).unwrap().np, healing_provider.heal_amount));
                             if let Some(pos) = positions.get(*target) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::to_cp437('♥'), 200.0);
