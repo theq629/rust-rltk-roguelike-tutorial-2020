@@ -6,7 +6,7 @@ use crate::{EffectRequest, Position, systems::particle_system::ParticleBuilder, 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub enum Effect {
     AWESOMENESS {
-        awe: i32,
+        poise: i32,
         reason: String,
         range: i32
     }
@@ -34,7 +34,7 @@ impl<'a> System<'a> for EffectsSystem {
 
         for (pos, request) in (&positions, &requests).join() {
             match &request.effect {
-                Effect::AWESOMENESS { awe, reason, range } => {
+                Effect::AWESOMENESS { poise, reason, range } => {
                     let (tiles, targets) = get_targets(Point::new(pos.x, pos.y), *range, &map);
                     for tile in tiles {
                         particle_builder.request(tile.x, tile.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('░'), 100.0);
@@ -47,7 +47,7 @@ impl<'a> System<'a> for EffectsSystem {
                         };
                     for target in targets {
                         awestruckness.insert(target, Awestruck {
-                            awe: *awe,
+                            poise: *poise,
                             reason: full_reason.to_string()
                         }).expect("Unable to insert awestruckness.");
                     }

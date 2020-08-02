@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Awe, drawing};
+use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -31,14 +31,14 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     let combat_stats = ecs.read_storage::<CombatStats>();
     let players = ecs.read_storage::<Player>();
     for (_player, stats) in (&players, &combat_stats).join() {
-        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
+        let health = format!(" Health: {} / {} ", stats.hp, stats.max_hp);
         ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
     }
 
-    let awe = ecs.read_storage::<Awe>();
-    for (_player, awe) in (&players, &awe).join() {
-        let s = format!(" Awe: {} / {} ", awe.awe, awe.max_awe);
-        ctx.print_color(25, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
+    let poise = ecs.read_storage::<Poise>();
+    for (_player, poise) in (&players, &poise).join() {
+        let s = format!(" Poise: {} / {} ", poise.poise, poise.max_poise);
+        ctx.print_color(28, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 }
 

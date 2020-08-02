@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Awe, liquids::Liquid, SpreadsLiquid};
+use super::{SerializeMe, CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -22,7 +22,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             verb_plural: true
         })
         .with(CombatStats{ max_hp: 30, hp: 30, defence: 2, power: 5 })
-        .with(Awe{ max_awe: 10, awe: 0 })
+        .with(Poise{ max_poise: 10, poise: 10 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
@@ -40,6 +40,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 20, hp: 20, defence: 1, power: 1 })
+        .with(Poise{ max_poise: 10, poise: 10 })
         .with(CanDoDances{ dances: vec![Dance::CIRCLE] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
@@ -58,6 +59,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 10, hp: 10, defence: 1, power: 1 })
+        .with(Poise{ max_poise: 5, poise: 5 })
         .with(CanDoDances{ dances: vec![Dance::JITTER] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
@@ -76,6 +78,7 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(CombatStats{ max_hp: 1, hp: 1, defence: 1, power: 1 })
+        .with(Poise{ max_poise: 1, poise: 1 })
         .with(CanDoDances{ dances: vec![Dance::HOP] })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();

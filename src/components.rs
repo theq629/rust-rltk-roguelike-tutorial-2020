@@ -209,9 +209,9 @@ pub struct Dancing {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
-pub struct Awe {
-    pub max_awe: i32,
-    pub awe: i32
+pub struct Poise {
+    pub max_poise: i32,
+    pub poise: i32
 }
 
 #[derive(Component, ConvertSaveload, Clone)]
@@ -222,7 +222,7 @@ pub struct EffectRequest {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Awestruck {
-    pub awe: i32,
+    pub poise: i32,
     pub reason: String
 }
 
@@ -273,7 +273,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<MovingAutomatically>();
     ecs.register::<CanDoDances>();
     ecs.register::<Dancing>();
-    ecs.register::<Awe>();
+    ecs.register::<Poise>();
     ecs.register::<EffectRequest>();
     ecs.register::<Awestruck>();
     ecs.register::<HasArgroedMonsters>();

@@ -28,23 +28,23 @@ impl Dance {
         match self {
             Dance::HOP => vec![
                     step(-1, 0),
-                    step_with_effect(1, 0, Effect::AWESOMENESS { awe: 1, reason: "dancing".to_string(), range: 3 })
+                    step_with_effect(1, 0, Effect::AWESOMENESS { poise: 1, reason: "dancing".to_string(), range: 3 })
             ],
             Dance::JITTER => vec![
                     step(-1, 0),
-                    step_with_effect(1, 0, Effect::AWESOMENESS { awe: 1, reason: "dancing".to_string(), range: 3 }),
-                    step(0, -1),
-                    step_with_effect(0, 1, Effect::AWESOMENESS { awe: 1, reason: "dancing".to_string(), range: 3 }),
                     step(1, 0),
-                    step_with_effect(-1, 0, Effect::AWESOMENESS { awe: 1, reason: "dancing".to_string(), range: 3 }),
+                    step(0, -1),
+                    step_with_effect(0, 1, Effect::AWESOMENESS { poise: 1, reason: "dancing".to_string(), range: 3 }),
+                    step(1, 0),
+                    step(-1, 0),
                     step(0, 1),
-                    step_with_effect(0, -1, Effect::AWESOMENESS { awe: 1, reason: "dancing".to_string(), range: 3 })
+                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 1, reason: "dancing".to_string(), range: 3 })
             ],
             Dance::CIRCLE => vec![
                     step(1, 0),
                     step(0, 1),
                     step(-1, 0),
-                    step_with_effect(0, -1, Effect::AWESOMENESS { awe: 4, reason: "dancing".to_string(), range: 5 })
+                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 4, reason: "dancing".to_string(), range: 5 })
             ]
         }
     }
