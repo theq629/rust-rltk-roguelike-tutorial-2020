@@ -55,7 +55,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     if damage == 0 {
                         gamelog.on(wants_melee.target, &format!("{} {} unable to hurt {}", capitalize(&name.np), name.verb("is", "are"), target_name.np));
                     } else {
-                        gamelog.on(wants_melee.target, &format!("{} {} {} for {} health", capitalize(&name.np), name.verb("hits", "hit"), target_name.np, damage));
+                        gamelog.on(wants_melee.target, &format!("{} {} {} ({} {})", capitalize(&name.np), name.verb("hits", "hit"), target_name.np, damage, Health::NAME));
                         SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }

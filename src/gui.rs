@@ -32,19 +32,19 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
 
     let health = ecs.read_storage::<Health>();
     for (_player, health) in (&players, &health).join() {
-        let health = format!(" Health: {} / {} ", health.health, health.max_health);
+        let health = format!(" {}: {} / {} ", capitalize(&Health::NAME.to_string()), health.health, health.max_health);
         ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
     }
 
     let stamina = ecs.read_storage::<Stamina>();
     for (_player, stamina) in (&players, &stamina).join() {
-        let s = format!(" Stamina: {} / {} ", stamina.stamina, stamina.max_stamina);
+        let s = format!(" {}: {} / {} ", capitalize(&Stamina::NAME.to_string()), stamina.stamina, stamina.max_stamina);
         ctx.print_color(28, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 
     let poise = ecs.read_storage::<Poise>();
     for (_player, poise) in (&players, &poise).join() {
-        let s = format!(" Poise: {} / {} ", poise.poise, poise.max_poise);
+        let s = format!(" {}: {} / {} ", capitalize(&Poise::NAME.to_string()), poise.poise, poise.max_poise);
         ctx.print_color(45, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
     }
 }

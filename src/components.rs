@@ -71,6 +71,10 @@ pub struct Health {
     pub health: i32
 }
 
+impl Health {
+    pub const NAME: &'static str = "health";
+}
+
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct CombatStats {
     pub defence: i32,
@@ -220,6 +224,10 @@ pub struct Poise {
     pub poise: i32
 }
 
+impl Poise {
+    pub const NAME: &'static str = "poise";
+}
+
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct EffectRequest {
     pub effect: Effect,
@@ -262,6 +270,10 @@ pub struct InFaction {
 pub struct Stamina {
     pub stamina: i32,
     pub max_stamina: i32
+}
+
+impl Stamina {
+    pub const NAME: &'static str = "stamina";
 }
 
 pub fn setup_ecs(ecs: &mut World) {

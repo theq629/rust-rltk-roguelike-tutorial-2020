@@ -91,7 +91,7 @@ impl<'a> System<'a> for DancingMovementSystem {
             }
 
             if stamina.stamina <= 0 {
-                gamelog.on(entity, &format!("{} {} too tired to continue dancing (poise -1).", capitalize(&name.np), name.verb("is", "are")));
+                gamelog.on(entity, &format!("{} {} too tired to continue dancing (1 {}).", capitalize(&name.np), name.verb("is", "are"), Poise::NAME));
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
                 poise.poise = i32::max(0, poise.poise - 1);
                 to_stop.push(entity);
@@ -152,7 +152,7 @@ impl<'a> System<'a> for DancingStatusSystem {
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, mut dancer, name, mut poise) in (&entities, &pos, &mut dancers, &names, &mut poise).join() {
             if pos.x != dancer.expect_pos.x || pos.y != dancer.expect_pos.y {
-                gamelog.on(entity, &format!("{} {} {} dance (poise -1).", capitalize(&name.np), name.verb("fails", "fail"), name.pronoun_pos));
+                gamelog.on(entity, &format!("{} {} {} dance (1 {}).", capitalize(&name.np), name.verb("fails", "fail"), name.pronoun_pos, Poise::NAME));
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
                 poise.poise = i32::max(0, poise.poise - 1);
                 to_stop.push(entity);
