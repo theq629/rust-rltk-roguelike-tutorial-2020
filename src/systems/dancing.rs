@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove};
+use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise};
 
 pub struct StartDancingSystem {}
 
@@ -11,7 +11,8 @@ impl<'a> System<'a> for StartDancingSystem {
         ReadStorage<'a, Position>,
         WriteStorage<'a, WantsToDance>,
         ReadStorage<'a, Name>,
-        WriteStorage<'a, Dancing>
+        WriteStorage<'a, Dancing>,
+        ReadStorage<'a, Poise>
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -21,10 +22,18 @@ impl<'a> System<'a> for StartDancingSystem {
             positions,
             mut want_to_dancers,
             names,
-            mut dancers
+            mut dancers,
+            poise
         ) = data;
 
         for (entity, pos, want_dance, name) in (&entities, &positions, &want_to_dancers, &names).join() {
+            if let Some(poise) = poise.get(entity) {
+                if poise.poise <= 0 {
+                    gamelog.on(entity, &format!("{} {} too intimidated to dance.", capitalize(&name.np), name.verb("is", "are")));
+                    continue;
+                }
+            }
+
             gamelog.on(entity, &format!("{} {} the {} dance.", capitalize(&name.np), name.verb("starts", "start"), want_dance.dance.name()));
             dancers.insert(entity, Dancing {
                 expect_pos: Point::new(pos.x, pos.y),
