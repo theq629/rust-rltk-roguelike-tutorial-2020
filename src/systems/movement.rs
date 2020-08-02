@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{WantsToMove, Position, Viewshed, Map, gamelog::{GameLog, capitalize}, Name};
+use crate::{WantsToMove, Position, Viewshed, Map, gamelog::GameLog, text::capitalize, Name};
 
 pub struct MovementSystem {}
 

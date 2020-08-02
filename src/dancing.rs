@@ -9,6 +9,12 @@ pub enum Dance {
     CIRCLE
 }
 
+pub static ALL: [Dance; 3] = [
+    Dance::HOP,
+    Dance::JITTER,
+    Dance::CIRCLE
+];
+
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct Step {
     pub direction: Point,

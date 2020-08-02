@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{CombatStats, SufferDamage, Player, Name, gamelog::{GameLog, capitalize}, RunState, Position, Map, liquids::Liquid};
+use crate::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, text::capitalize, RunState, Position, Map, liquids::Liquid};
 
 pub struct DamageSystem {}
 

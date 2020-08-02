@@ -1,6 +1,6 @@
 use std::cmp::{max};
 use specs::prelude::*;
-use crate::{gamelog::{GameLog, capitalize}, Poise, Awestruck, systems::particle_system::ParticleBuilder, Position, Name};
+use crate::{gamelog::GameLog, text::capitalize, Poise, Awestruck, systems::particle_system::ParticleBuilder, Position, Name};
 
 pub struct AwesomenessSystem {}
 

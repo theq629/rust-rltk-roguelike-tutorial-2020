@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::{GameLog, capitalize}, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
+use crate::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, text::capitalize, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters};
 
 pub struct MeleeCombatSystem {}
 

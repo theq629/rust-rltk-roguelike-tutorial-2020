@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point};
-use crate::{EffectRequest, Position, systems::particle_system::ParticleBuilder, map::Map, Awestruck};
+use crate::{EffectRequest, Position, map::Map, Awestruck};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub enum Effect {
@@ -16,7 +16,6 @@ pub struct EffectsSystem {}
 
 impl<'a> System<'a> for EffectsSystem {
     type SystemData = (
-        WriteExpect<'a, ParticleBuilder>,
         WriteExpect<'a, Map>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, EffectRequest>,
@@ -25,7 +24,6 @@ impl<'a> System<'a> for EffectsSystem {
 
     fn run(&mut self, data: Self::SystemData) {
         let (
-            mut particle_builder,
             map,
             positions,
             mut requests,
@@ -35,10 +33,7 @@ impl<'a> System<'a> for EffectsSystem {
         for (pos, request) in (&positions, &requests).join() {
             match &request.effect {
                 Effect::AWESOMENESS { poise, reason, range } => {
-                    let (tiles, targets) = get_targets(Point::new(pos.x, pos.y), *range, &map);
-                    for tile in tiles {
-                        particle_builder.request(tile.x, tile.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('░'), 100.0);
-                    }
+                    let (_, targets) = get_targets(Point::new(pos.x, pos.y), *range, &map);
                     let full_reason =
                         if let Some(effector_np_pos) = &request.effector_np_pos {
                             format!("{} {}", effector_np_pos, reason)

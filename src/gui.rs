@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode};
-use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing};
+use super::{CombatStats, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -125,28 +125,41 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
     inventory_menu::<Equipped>(gs, ctx, "Remove Which Item?".to_string(), &|item: &Equipped| item.owner == *player_entity)
 }
 
+pub fn dance_menu(ctx: &mut Rltk) -> (ItemMenuResult, Option<&dancing::Dance>) {
+    let items = dancing::ALL.iter().map(|dance| {
+        (capitalize(&dance.name()), dance)
+    }).collect();
+    menu::<&dancing::Dance>(ctx, "Do Which Dance?".to_string(), items)
+}
+
 fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, filter: &dyn Fn(&C) -> bool) -> (ItemMenuResult, Option<Entity>) {
+    let entities = gs.ecs.entities();
     let names = gs.ecs.read_storage::<Name>();
     let backpack = gs.ecs.read_storage::<C>();
-    let entities = gs.ecs.entities();
 
-    let inventory = (&backpack, &names).join().filter(|item| filter(item.0));
-    let count = inventory.count();
+    let items = (&entities, &backpack, &names).join().filter(|(_, bp, _)|
+        filter(bp)
+    ).map(|(e, _, n)|
+        (n.name.to_string(), e.clone())
+    ).collect();
+
+    menu::<Entity>(ctx, title, items)
+}
+
+fn menu<T: Clone>(ctx: &mut Rltk, title: String, items: Vec<(String, T)>) -> (ItemMenuResult, Option<T>) {
+    let count = items.len();
 
     let mut y = (25 - (count / 2)) as i32;
     ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
     ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), title);
     ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel".to_string());
 
-    let mut equippable: Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| filter(item.1)) {
+    for (name, _) in items.iter() {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as rltk::FontCharType);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
-
-        ctx.print(21, y, &name.name.to_string());
-        equippable.push(entity);
+        ctx.print(21, y, &name.to_string());
         y += 1;
         j += 1;
     }
@@ -159,7 +172,7 @@ fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, filte
                 _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
-                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                        return (ItemMenuResult::Selected, Some(items[selection as usize].1.clone()));
                     }
                     (ItemMenuResult::NoResponse, None)
                 }

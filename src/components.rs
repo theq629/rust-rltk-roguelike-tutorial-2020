@@ -205,7 +205,8 @@ pub struct CanDoDances {
 pub struct Dancing {
     pub expect_pos: Point,
     pub steps: Vec<Step>,
-    pub step_idx: u32
+    pub step_idx: u32,
+    pub repetitions: u32
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
@@ -238,6 +239,12 @@ pub struct HasArgroedMonsters {}
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SpreadsLiquid {
     pub liquid: Liquid
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct WantsToDance {
+    pub dance: Dance,
+    pub repetitions: u32
 }
 
 pub fn setup_ecs(ecs: &mut World) {
@@ -279,5 +286,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<HasArgroedMonsters>();
     ecs.register::<WantsToMove>();
     ecs.register::<SpreadsLiquid>();
+    ecs.register::<WantsToDance>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

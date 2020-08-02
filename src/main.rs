@@ -22,6 +22,7 @@ mod random_table;
 mod systems;
 use systems::damage_system::{delete_the_dead};
 mod state;
+mod text;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -33,6 +34,7 @@ pub enum RunState {
     ShowDropItem,
     ShowTargeting { range: i32, item: Entity },
     ShowRemoveItem,
+    ShowDanceMenu,
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
     NextLevel,
@@ -68,7 +70,19 @@ impl GameState for state::State {
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
-                newrunstate = player_input(self, ctx);
+                let mut busy = false;
+                {
+                    let player = *self.ecs.fetch::<Entity>();
+                    let dancers = self.ecs.write_storage::<Dancing>();
+                    if let Some(_) = dancers.get(player) {
+                        busy = true;
+                    }
+                }
+                if busy {
+                    newrunstate = RunState::PlayerTurn;
+                } else {
+                    newrunstate = player_input(self, ctx);
+                }
             }
             RunState::PlayerTurn => {
                 self.run_systems();
@@ -131,6 +145,22 @@ impl GameState for state::State {
                         let item_entity = result.1.unwrap();
                         let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
                         intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
+                    }
+                }
+            }
+            RunState::ShowDanceMenu => {
+                let result = gui::dance_menu(ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let dance = result.1.unwrap().clone();
+                        let mut intent = self.ecs.write_storage::<WantsToDance>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDance{
+                            dance: dance,
+                            repetitions: 1 as u32
+                        }).expect("Unable to insert intent");
                         newrunstate = RunState::PlayerTurn;
                     }
                 }

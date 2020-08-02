@@ -22,7 +22,9 @@ pub trait UnifiedDispatcher {
 construct_dispatcher!(
     build [
         with (MonsterAI, "monster_ai", &[])
-        with (DancingMonsterAI, "dancing_monster_ai", &[])
+        barrier
+        with (DancingMovementSystem, "dancing_movement", &[])
+        barrier
         with (MovementSystem, "movement", &[])
         with (MapIndexingSystem, "map_index", &[])
         with (AutoMovementSystem, "auto_movement", &[])
@@ -36,6 +38,9 @@ construct_dispatcher!(
         with (ItemRemoveSystem, "item_remove", &[])
         with (ParticleSpawnSystem, "particle_spawn", &[])
         with (VisibilitySystem, "visibility", &[])
+        with (StartDancingSystem, "start_dancing", &[])
+        barrier
+        with (DancingStatusSystem, "dancing_status", &[])
         barrier
         with (LogUpdaterSystem, "log_updater", &[])
     ]

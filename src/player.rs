@@ -180,6 +180,8 @@ fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 
             VirtualKeyCode::R => return RunState::ShowRemoveItem,
 
+            VirtualKeyCode::M => return RunState::ShowDanceMenu,
+
             VirtualKeyCode::Escape => return RunState::SaveGame,
 
             _ => { return RunState::AwaitingInput }

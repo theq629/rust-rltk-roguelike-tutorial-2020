@@ -4,7 +4,7 @@ pub use dispatcher::UnifiedDispatcher;
 mod visibility_system;
 pub use visibility_system::VisibilitySystem;
 mod monster_ai_system;
-pub use monster_ai_system::{MonsterAI, DancingMonsterAI};
+pub use monster_ai_system::{MonsterAI};
 pub mod auto_movement_system;
 pub use auto_movement_system::AutoMovementSystem;
 mod map_indexing_system;
@@ -25,6 +25,8 @@ mod movement;
 pub use movement::MovementSystem;
 mod log_updater;
 pub use log_updater::LogUpdaterSystem;
+mod dancing;
+pub use dancing::{StartDancingSystem, DancingMovementSystem, DancingStatusSystem};
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()
