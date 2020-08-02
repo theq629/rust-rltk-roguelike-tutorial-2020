@@ -27,6 +27,8 @@ mod log_updater;
 pub use log_updater::LogUpdaterSystem;
 mod dancing;
 pub use dancing::{StartDancingSystem, DancingMovementSystem, DancingStatusSystem};
+mod recovery;
+pub use recovery::{RecoverySystem};
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()

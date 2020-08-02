@@ -22,6 +22,7 @@ mod random_table;
 mod systems;
 use systems::damage_system::{delete_the_dead};
 mod state;
+use state::{Turn};
 mod text;
 mod factions;
 
@@ -86,6 +87,7 @@ impl GameState for state::State {
                 }
             }
             RunState::PlayerTurn => {
+                self.next_turn();
                 self.run_systems();
                 newrunstate = RunState::MonsterTurn;
             }

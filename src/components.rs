@@ -276,6 +276,9 @@ impl Stamina {
     pub const NAME: &'static str = "stamina";
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct Resting {}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -319,5 +322,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToDance>();
     ecs.register::<InFaction>();
     ecs.register::<Stamina>();
+    ecs.register::<Resting>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

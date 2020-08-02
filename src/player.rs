@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Viewshed, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, Monster, systems::auto_movement_system, Poise, WantsToMove, Stamina}; 
+use super::{state::State, Position, Player, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, systems::auto_movement_system, WantsToMove, Resting}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -9,35 +9,8 @@ pub struct KeyState {
 
 fn skip_turn(ecs: &mut World) -> RunState {
     let player_entity = ecs.fetch::<Entity>();
-    let viewshed_components = ecs.read_storage::<Viewshed>();
-    let monsters = ecs.read_storage::<Monster>();
-
-    let worldmap_resource = ecs.fetch::<Map>();
-
-    let mut can_heal = true;
-    let viewshed = viewshed_components.get(*player_entity).unwrap();
-    for tile in viewshed.visible_tiles.iter() {
-        let idx = worldmap_resource.xy_idx(tile.x, tile.y);
-        for entity_id in worldmap_resource.tile_content[idx].iter() {
-            match monsters.get(*entity_id) {
-                None => {}
-                Some(_) => { can_heal = false; }
-            }
-        }
-    }
-
-    if can_heal {
-        let mut health_components = ecs.write_storage::<Health>();
-        let player_health = health_components.get_mut(*player_entity).unwrap();
-        player_health.health = i32::min(player_health.health + 1, player_health.max_health);
-        let mut stamina_components = ecs.write_storage::<Stamina>();
-        let player_stamina = stamina_components.get_mut(*player_entity).unwrap();
-        player_stamina.stamina = i32::min(player_stamina.stamina + 1, player_stamina.max_stamina);
-        let mut poise_components = ecs.write_storage::<Poise>();
-        let player_poise = poise_components.get_mut(*player_entity).unwrap();
-        player_poise.poise = i32::min(player_poise.poise + 1, player_poise.max_poise);
-    }
-
+    let mut resting = ecs.write_storage::<Resting>();
+    resting.insert(*player_entity, Resting {}).expect("Failed to insert resting.");
     RunState::PlayerTurn
 }
 

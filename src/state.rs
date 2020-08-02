@@ -9,6 +9,8 @@ pub struct State {
     dispatcher: Box<dyn systems::UnifiedDispatcher + 'static>
 }
 
+pub type Turn = u32;
+
 impl State {
     pub fn new() -> Self {
         State {
@@ -39,6 +41,13 @@ impl State {
         }
 
         self.ecs.insert(map);
+
+        self.ecs.insert::<Turn>(0);
+    }
+
+    pub fn next_turn(&mut self) {
+        let mut turn = self.ecs.write_resource::<Turn>();
+        *turn += 1;
     }
 
     pub fn goto_next_level(&mut self) {

@@ -39,6 +39,7 @@ construct_dispatcher!(
         with (ParticleSpawnSystem, "particle_spawn", &[])
         with (VisibilitySystem, "visibility", &[])
         with (StartDancingSystem, "start_dancing", &[])
+        with (RecoverySystem, "recovery", &[])
         barrier
         with (DancingStatusSystem, "dancing_status", &[])
         barrier
