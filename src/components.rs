@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
-use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid, factions::Faction};
+use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid, factions::Faction, systems::monster_ai_system::MonsterAIState};
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
@@ -32,6 +32,23 @@ pub struct Viewshed {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Monster {}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct MonsterAI {
+    pub state: MonsterAIState,
+    pub saw_enemy_last_turn: bool,
+    pub last_saw_enemy: Option<Point>
+}
+
+impl MonsterAI {
+    pub fn new() -> Self {
+        MonsterAI {
+            state: MonsterAIState::WAITING,
+            saw_enemy_last_turn: false,
+            last_saw_enemy: None
+        }
+    }
+}
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Name {
@@ -73,6 +90,10 @@ pub struct Health {
 
 impl Health {
     pub const NAME: &'static str = "health";
+
+    pub fn colour() -> RGB {
+        RGB::named(rltk::RED)
+    }
 }
 
 #[derive(Component, ConvertSaveload, Clone)]
@@ -226,6 +247,10 @@ pub struct Poise {
 
 impl Poise {
     pub const NAME: &'static str = "poise";
+
+    pub fn colour() -> RGB {
+        RGB::named(rltk::YELLOW)
+    }
 }
 
 #[derive(Component, ConvertSaveload, Clone)]
@@ -274,6 +299,10 @@ pub struct Stamina {
 
 impl Stamina {
     pub const NAME: &'static str = "stamina";
+
+    pub fn colour() -> RGB {
+        RGB::named(rltk::BLUE)
+    }
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
@@ -285,6 +314,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Player>();
     ecs.register::<Viewshed>();
     ecs.register::<Monster>();
+    ecs.register::<MonsterAI>();
     ecs.register::<Name>();
     ecs.register::<BlocksTile>();
     ecs.register::<Health>();

@@ -60,9 +60,9 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
 
 fn room_table(map_depth: i32) -> RandomTable {
     RandomTable::new()
-        .add("Rabbit", 50)
-        .add("Thrall", 20)
-        .add("Vampire", 10)
+        .add("Rabbit", 100)
+        .add("Thrall", 50)
+        .add("Vampire", 25)
         .add("Blood Dart", 50)
         .add("Blood Balloon", 50)
         .add("Oil Dart", 50)

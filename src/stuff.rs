@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina};
+use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina};
 
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
@@ -44,6 +44,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
             render_order: 1
         })
         .with(Monster{})
+        .with(MonsterAI::new())
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
@@ -69,6 +70,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
             render_order: 1
         })
         .with(Monster{})
+        .with(MonsterAI::new())
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
@@ -94,6 +96,7 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
             render_order: 1
         })
         .with(Monster{})
+        .with(MonsterAI::new())
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })

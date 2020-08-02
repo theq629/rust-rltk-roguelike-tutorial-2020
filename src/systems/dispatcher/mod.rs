@@ -21,7 +21,7 @@ pub trait UnifiedDispatcher {
 
 construct_dispatcher!(
     build [
-        with (MonsterAI, "monster_ai", &[])
+        with (MonsterAISystem, "monster_ai", &[])
         barrier
         with (DancingMovementSystem, "dancing_movement", &[])
         barrier
