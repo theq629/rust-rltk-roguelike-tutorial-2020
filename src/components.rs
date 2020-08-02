@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
-use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid};
+use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid, factions::Faction};
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
@@ -247,6 +247,11 @@ pub struct WantsToDance {
     pub repetitions: u32
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct InFaction {
+    pub faction: Faction
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -287,5 +292,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToMove>();
     ecs.register::<SpreadsLiquid>();
     ecs.register::<WantsToDance>();
+    ecs.register::<InFaction>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

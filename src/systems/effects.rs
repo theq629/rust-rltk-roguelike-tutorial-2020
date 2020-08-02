@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point};
-use crate::{EffectRequest, Position, map::Map, Awestruck};
+use crate::{EffectRequest, Position, map::Map, Awestruck, InFaction};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub enum Effect {
@@ -16,21 +16,25 @@ pub struct EffectsSystem {}
 
 impl<'a> System<'a> for EffectsSystem {
     type SystemData = (
+        Entities<'a>,
         WriteExpect<'a, Map>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, EffectRequest>,
-        WriteStorage<'a, Awestruck>
+        WriteStorage<'a, Awestruck>,
+        ReadStorage<'a, InFaction>
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (
+            entities,
             map,
             positions,
             mut requests,
-            mut awestruckness
+            mut awestruckness,
+            factions
         ) = data;
 
-        for (pos, request) in (&positions, &requests).join() {
+        for (entity, pos, request) in (&entities, &positions, &requests).join() {
             match &request.effect {
                 Effect::AWESOMENESS { poise, reason, range } => {
                     let (_, targets) = get_targets(Point::new(pos.x, pos.y), *range, &map);
@@ -40,11 +44,19 @@ impl<'a> System<'a> for EffectsSystem {
                         } else {
                             reason.to_string()
                         };
+                    let entity_faction = factions.get(entity);
                     for target in targets {
-                        awestruckness.insert(target, Awestruck {
-                            poise: *poise,
-                            reason: full_reason.to_string()
-                        }).expect("Unable to insert awestruckness.");
+                        let are_enemies =
+                            match (entity_faction, factions.get(target)) {
+                                (Some(f1), Some(f2)) => f1.faction != f2.faction,
+                                (_, _) => true
+                            };
+                        if are_enemies {
+                            awestruckness.insert(target, Awestruck {
+                                poise: *poise,
+                                reason: full_reason.to_string()
+                            }).expect("Unable to insert awestruckness.");
+                        }
                     }
                 }
             }

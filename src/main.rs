@@ -23,6 +23,7 @@ mod systems;
 use systems::damage_system::{delete_the_dead};
 mod state;
 mod text;
+mod factions;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
