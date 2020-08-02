@@ -72,13 +72,14 @@ impl<'a> System<'a> for DancingMovementSystem {
                        WriteStorage<'a, WantsToMove>,
                        ReadStorage<'a, Name>,
                        ReadStorage<'a, CanDoDances>,
-                       WriteStorage<'a, Stamina>);
+                       WriteStorage<'a, Stamina>,
+                       WriteStorage<'a, Poise>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina) = data;
+        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina, mut poise) = data;
 
         let mut to_stop: Vec<Entity> = Vec::new();
-        for (entity, pos, mut dancer, mut stamina, name) in (&entities, &pos, &mut dancers, &mut stamina, &names).join() {
+        for (entity, pos, mut dancer, mut stamina, name, mut poise) in (&entities, &pos, &mut dancers, &mut stamina, &names, &mut poise).join() {
             if *runstate != RunState::PlayerTurn {
                 if let None = players.get(entity) {
                     continue;
@@ -90,8 +91,9 @@ impl<'a> System<'a> for DancingMovementSystem {
             }
 
             if stamina.stamina <= 0 {
-                gamelog.on(entity, &format!("{} {} too tired to continue dancing.", capitalize(&name.np), name.verb("is", "are")));
+                gamelog.on(entity, &format!("{} {} too tired to continue dancing (poise -1).", capitalize(&name.np), name.verb("is", "are")));
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
+                poise.poise = i32::max(0, poise.poise - 1);
                 to_stop.push(entity);
                 continue;
             } else {
@@ -141,16 +143,18 @@ impl<'a> System<'a> for DancingStatusSystem {
                        ReadStorage<'a, Position>,
                        WriteExpect<'a, ParticleBuilder>,
                        WriteStorage<'a, Dancing>,
-                       ReadStorage<'a, Name>);
+                       ReadStorage<'a, Name>,
+                       WriteStorage<'a, Poise>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut gamelog, entities, pos, mut particle_builder, mut dancers, names) = data;
+        let (mut gamelog, entities, pos, mut particle_builder, mut dancers, names, mut poise) = data;
 
         let mut to_stop: Vec<Entity> = Vec::new();
-        for (entity, pos, mut dancer, name) in (&entities, &pos, &mut dancers, &names).join() {
+        for (entity, pos, mut dancer, name, mut poise) in (&entities, &pos, &mut dancers, &names, &mut poise).join() {
             if pos.x != dancer.expect_pos.x || pos.y != dancer.expect_pos.y {
-                gamelog.on(entity, &format!("{} {} {} dance.", capitalize(&name.np), name.verb("fails", "fail"), name.pronoun_pos));
+                gamelog.on(entity, &format!("{} {} {} dance (poise -1).", capitalize(&name.np), name.verb("fails", "fail"), name.pronoun_pos));
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
+                poise.poise = i32::max(0, poise.poise - 1);
                 to_stop.push(entity);
                 continue;
             }
