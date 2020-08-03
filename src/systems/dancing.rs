@@ -90,7 +90,7 @@ impl<'a> System<'a> for DancingMovementSystem {
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, mut dancer, mut stamina, name, mut poise) in (&entities, &pos, &mut dancers, &mut stamina, &names, &mut poise).join() {
-            if *runstate != RunState::PlayerTurn {
+            if *runstate == RunState::PlayerTurn {
                 if let None = players.get(entity) {
                     continue;
                 }

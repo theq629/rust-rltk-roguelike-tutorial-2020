@@ -32,7 +32,7 @@ impl<'a> System<'a> for RecoverySystem {
         let mut to_stop_resting = Vec::new();
 
         for (entity, mut health, mut stamina, mut poise) in (&entities, &mut health, &mut stamina, &mut poise).join() {
-            if *runstate != RunState::PlayerTurn {
+            if *runstate == RunState::PlayerTurn {
                 if let None = players.get(entity) {
                     continue;
                 }
