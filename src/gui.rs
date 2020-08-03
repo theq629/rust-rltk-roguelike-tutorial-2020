@@ -153,7 +153,8 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
 
 pub fn dance_menu(ctx: &mut Rltk) -> (ItemMenuResult, Option<&dancing::Dance>) {
     let items = dancing::ALL.iter().map(|dance| {
-        (capitalize(&dance.name()), dance)
+        let name = format!("{} ({} steps)", capitalize(&dance.name()), dance.steps().len());
+        (name, dance)
     }).collect();
     menu::<&dancing::Dance>(ctx, "Do which dance?".to_string(), "you can't do any dances".to_string(), items)
 }
