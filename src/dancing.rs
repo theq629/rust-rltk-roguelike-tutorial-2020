@@ -34,23 +34,23 @@ impl Dance {
         match self {
             Dance::HOP => vec![
                     step(-1, 0),
-                    step_with_effect(1, 0, Effect::AWESOMENESS { poise: 1, range: 3 })
+                    step_with_effect(1, 0, Effect::AWESOMENESS { poise: 1 })
             ],
             Dance::JITTER => vec![
                     step(-1, 0),
                     step(1, 0),
                     step(0, -1),
-                    step_with_effect(0, 1, Effect::AWESOMENESS { poise: 1, range: 3 }),
+                    step_with_effect(0, 1, Effect::AWESOMENESS { poise: 1 }),
                     step(1, 0),
                     step(-1, 0),
                     step(0, 1),
-                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 1, range: 3 })
+                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 1 })
             ],
             Dance::CIRCLE => vec![
                     step(1, 0),
                     step(0, 1),
                     step(-1, 0),
-                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 4, range: 5 })
+                    step_with_effect(0, -1, Effect::AWESOMENESS { poise: 4 })
             ]
         }
     }
