@@ -36,7 +36,6 @@ construct_dispatcher!(
         with (ItemUseSystem, "item_use", &[])
         with (ItemDropSystem, "item_drop", &[])
         with (ItemRemoveSystem, "item_remove", &[])
-        with (ParticleSpawnSystem, "particle_spawn", &[])
         with (VisibilitySystem, "visibility", &[])
         with (StartDancingSystem, "start_dancing", &[])
         with (RecoverySystem, "recovery", &[])
@@ -47,6 +46,7 @@ construct_dispatcher!(
         with (DancingStatusSystem, "dancing_status", &[])
         with (PlayerListeningSystem, "player_listening", &[])
         barrier
+        with (ParticleSpawnSystem, "particle_spawn", &[])
         with (LogUpdaterSystem, "log_updater", &[])
     ]
 );
