@@ -137,15 +137,15 @@ fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                 state.requested_auto_move = true;
             }
 
+            VirtualKeyCode::Numpad5 |
             VirtualKeyCode::Period => {
+                return skip_turn(&mut gs.ecs)
+            },
+
+            VirtualKeyCode::Space => {
                 if try_next_level(&mut gs.ecs) {
                     return RunState::NextLevel;
                 }
-            },
-
-            VirtualKeyCode::Numpad5 |
-            VirtualKeyCode::Space => {
-                return skip_turn(&mut gs.ecs)
             },
 
             VirtualKeyCode::G => get_item(&mut gs.ecs),
