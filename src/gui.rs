@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode, Rect};
-use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info};
+use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info, CanDoDances};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -151,12 +151,20 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
     inventory_menu::<Equipped>(gs, ctx, "Remove which item?".to_string(), "nothing equipped".to_string(), &|item: &Equipped| item.owner == *player_entity)
 }
 
-pub fn dance_menu(ctx: &mut Rltk) -> (ItemMenuResult, Option<&dancing::Dance>) {
-    let items = dancing::ALL.iter().map(|dance| {
-        let name = format!("{} ({} steps)", capitalize(&dance.name()), dance.steps().len());
-        (name, dance)
-    }).collect();
-    menu::<&dancing::Dance>(ctx, "Do which dance?".to_string(), "you can't do any dances".to_string(), items)
+pub fn dance_menu(gs: &State, ctx: &mut Rltk) -> (ItemMenuResult, Option<dancing::Dance>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let can_do_dances = gs.ecs.read_storage::<CanDoDances>();
+    let items = 
+        if let Some(can_dance) = can_do_dances.get(*player_entity) {
+            can_dance.dances.iter().map(|dance| {
+                let name = format!("{} ({} steps)", capitalize(&dance.name()), dance.steps().len());
+                (name, dance)
+            }).collect()
+        } else {
+            Vec::new()
+        };
+    let (result, dance) = menu::<&dancing::Dance>(ctx, "Do which dance?".to_string(), "you can't do any dances".to_string(), items);
+    (result, dance.map(|d| d.clone()))
 }
 
 fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, empty_text: String, filter: &dyn Fn(&C) -> bool) -> (ItemMenuResult, Option<Entity>) {

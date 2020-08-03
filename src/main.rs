@@ -158,7 +158,7 @@ impl GameState for state::State {
                 }
             }
             RunState::ShowDanceMenu => {
-                let result = gui::dance_menu(ctx);
+                let result = gui::dance_menu(self, ctx);
                 match result.0 {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {}
