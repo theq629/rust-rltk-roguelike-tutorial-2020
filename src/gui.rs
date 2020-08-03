@@ -1,4 +1,4 @@
-use rltk::{RGB, Rltk, Point, VirtualKeyCode};
+use rltk::{RGB, Rltk, Point, VirtualKeyCode, Rect};
 use super::{Health, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina};
 use specs::prelude::*;
 
@@ -17,44 +17,67 @@ pub enum ItemMenuResult {
 }
 
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
-    ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
     draw_stats(ecs, ctx);
     draw_log(ecs, ctx);
     draw_tooltips(ecs, ctx);
 }
 
 fn draw_stats(ecs: &World, ctx: &mut Rltk) {
-    let map = ecs.fetch::<Map>();
-    let depth = format!("Depth: {}", map.depth);
-    ctx.print_color(2, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &depth);
-
+    let (screen_width, screen_height) = ctx.get_char_size();
     let players = ecs.read_storage::<Player>();
 
+    let bg = RGB::from_u8(64, 64, 64);
+    let values_fg = RGB::from_u8(192, 192, 192);
+    let y = screen_height as i32 - 8;
+
+    for x in 0..screen_width {
+        ctx.set_bg(x, y, bg);
+    }
+
+    let mut x = 1;
     let health = ecs.read_storage::<Health>();
     for (_player, health) in (&players, &health).join() {
-        let health = format!(" {}: {} / {} ", capitalize(&Health::NAME.to_string()), health.health, health.max_health);
-        ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
+        x = 1 + draw_stat(capitalize(&Health::NAME), health.health, health.max_health, x, y, Health::colour(), values_fg, bg, ctx);
     }
-
     let stamina = ecs.read_storage::<Stamina>();
     for (_player, stamina) in (&players, &stamina).join() {
-        let s = format!(" {}: {} / {} ", capitalize(&Stamina::NAME.to_string()), stamina.stamina, stamina.max_stamina);
-        ctx.print_color(28, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
+        x = 1 + draw_stat(capitalize(&Stamina::NAME), stamina.stamina, stamina.max_stamina, x, y, Stamina::colour(), values_fg, bg, ctx);
     }
-
     let poise = ecs.read_storage::<Poise>();
     for (_player, poise) in (&players, &poise).join() {
-        let s = format!(" {}: {} / {} ", capitalize(&Poise::NAME.to_string()), poise.poise, poise.max_poise);
-        ctx.print_color(45, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &s);
+        x = draw_stat(capitalize(&Poise::NAME), poise.poise, poise.max_poise, x, y, Poise::colour(), values_fg, bg, ctx);
     }
 }
 
+fn draw_stat<S: ToString>(name: S, value: i32, max_value: i32, x: i32, y: i32, name_fg: RGB, value_fg: RGB, bg: RGB, ctx: &mut Rltk) -> i32 {
+    let name = name.to_string();
+    let name_len = name.len() as i32;
+    let mut x = x;
+    ctx.print_color(x, y, name_fg, bg, name);
+    x += name_len + 1;
+    let value_text = format!("{} / {}", value, max_value);
+    let value_text_len = value_text.len() as i32;
+    ctx.print_color(x, y, value_fg, bg, value_text);
+    x += i32::max(7, value_text_len);
+    x
+
+}
+
 fn draw_log(ecs: &World, ctx: &mut Rltk) {
+    let (screen_width, screen_height) = ctx.get_char_size();
+    let fg = RGB::from_u8(128, 128, 128);
+    let odd_bg = RGB::from_u8(24, 24, 24);
+    let even_bg = RGB::from_u8(16, 16, 16);
     let log = ecs.fetch::<PlayerLog>();
-    let mut y = 44;
-    for s in log.entries.iter().rev().take(5) {
-        ctx.print(2, y, s);
-        y += 1;
+    let avail_y = 7;
+    let mut y = screen_height - 1;
+    for (i, msg) in log.entries.iter().enumerate().rev().take(avail_y as usize) {
+        let bg = if i % 2 == 0 { even_bg } else { odd_bg };
+        for x in 0..screen_width {
+            ctx.set_bg(x, y, bg);
+        }
+        ctx.print_color(0, y, fg, bg, msg);
+        y -= 1;
     }
 }
 
@@ -62,6 +85,10 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
     let map = ecs.fetch::<Map>();
     let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
+
+    let bg = RGB::from_u8(64, 64, 64);
+    let fg = RGB::from_u8(192, 192, 192);
+    let arrow_fg = RGB::from_u8(255, 255, 255);
 
     let mouse_pos = ctx.mouse_pos();
     if mouse_pos.0 >= map.width || mouse_pos.1 >= map.height {
@@ -104,42 +131,42 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
         }
         let mut y = mouse_pos.1;
         for s in tooltip.iter() {
-            ctx.print_color(left_x, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), s);
+            ctx.print_color(left_x, y, fg, bg, s);
             let padding = (width - s.len() as i32) - 1;
             let mut x = pad_start_x;
             for _ in 0..padding {
-                ctx.print_color(x, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &" ".to_string());
+                ctx.print_color(x, y, fg, bg, &" ".to_string());
                 x += pad_delta_x;
             }
             y += 1;
         }
-        ctx.print_color(arrow_pos.x, arrow_pos.y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &arrow);
+        ctx.print_color(arrow_pos.x, arrow_pos.y, arrow_fg, bg, &arrow);
     }
 }
 
 pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     let player_entity = gs.ecs.fetch::<Entity>();
-    inventory_menu::<InBackpack>(gs, ctx, "Inventory".to_string(), &|item: &InBackpack| item.owner == *player_entity)
+    inventory_menu::<InBackpack>(gs, ctx, "Use which item?".to_string(), "nothing in inventory".to_string(), &|item: &InBackpack| item.owner == *player_entity)
 }
 
 pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     let player_entity = gs.ecs.fetch::<Entity>();
-    inventory_menu::<InBackpack>(gs, ctx, "Drop Which Item?".to_string(), &|item: &InBackpack| item.owner == *player_entity)
+    inventory_menu::<InBackpack>(gs, ctx, "Drop which item?".to_string(), "nothing in inventory".to_string(), &|item: &InBackpack| item.owner == *player_entity)
 }
 
 pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
     let player_entity = gs.ecs.fetch::<Entity>();
-    inventory_menu::<Equipped>(gs, ctx, "Remove Which Item?".to_string(), &|item: &Equipped| item.owner == *player_entity)
+    inventory_menu::<Equipped>(gs, ctx, "Remove which item?".to_string(), "nothing equipped".to_string(), &|item: &Equipped| item.owner == *player_entity)
 }
 
 pub fn dance_menu(ctx: &mut Rltk) -> (ItemMenuResult, Option<&dancing::Dance>) {
     let items = dancing::ALL.iter().map(|dance| {
         (capitalize(&dance.name()), dance)
     }).collect();
-    menu::<&dancing::Dance>(ctx, "Do Which Dance?".to_string(), items)
+    menu::<&dancing::Dance>(ctx, "Do which dance?".to_string(), "you can't do any dances".to_string(), items)
 }
 
-fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, filter: &dyn Fn(&C) -> bool) -> (ItemMenuResult, Option<Entity>) {
+fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, empty_text: String, filter: &dyn Fn(&C) -> bool) -> (ItemMenuResult, Option<Entity>) {
     let entities = gs.ecs.entities();
     let names = gs.ecs.read_storage::<Name>();
     let backpack = gs.ecs.read_storage::<C>();
@@ -150,25 +177,39 @@ fn inventory_menu<C: Component>(gs: &State, ctx: &mut Rltk, title: String, filte
         (n.name.to_string(), e.clone())
     ).collect();
 
-    menu::<Entity>(ctx, title, items)
+    menu::<Entity>(ctx, title, empty_text, items)
 }
 
-fn menu<T: Clone>(ctx: &mut Rltk, title: String, items: Vec<(String, T)>) -> (ItemMenuResult, Option<T>) {
+fn menu<T: Clone>(ctx: &mut Rltk, title: String, empty_text: String, items: Vec<(String, T)>) -> (ItemMenuResult, Option<T>) {
+    let (screen_width, screen_height) = ctx.get_char_size();
     let count = items.len();
 
-    let mut y = (25 - (count / 2)) as i32;
-    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
-    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), title);
-    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel".to_string());
+    let bg = RGB::from_u8(64, 64, 64);
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let items_fg = RGB::from_u8(192, 192, 192);
+    let key_fg = RGB::from_u8(192, 192, 64);
 
-    let mut j = 0;
-    for (name, _) in items.iter() {
-        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
-        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as rltk::FontCharType);
-        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
-        ctx.print(21, y, &name.to_string());
-        y += 1;
-        j += 1;
+    let space_for_items = if count > 0 { count } else { 1 };
+    let start_x = (screen_width / 4 - 2) as i32;
+    let start_y = ((screen_height / 2) - (space_for_items / 2) as u32) as i32;
+    let width = (2 * screen_width / 4) as i32;
+    let height = (space_for_items + 3) as i32;
+
+    ctx.fill_region(Rect::with_size(start_x, start_y, width, height), rltk::to_cp437(' '), items_fg, bg);
+    ctx.print_color(start_x, start_y, title_fg, bg, title);
+    ctx.print_color(start_x, start_y + height, title_fg, bg, "Escape to cancel".to_string());
+
+    let mut y = start_y + 2;
+    if count > 0 {
+        let mut j = 0;
+        for (name, _) in items.iter() {
+            ctx.set(start_x, y, key_fg, bg, 97+j as rltk::FontCharType);
+            ctx.print_color(start_x + 2, y, items_fg, bg, &name.to_string());
+            y += 1;
+            j += 1;
+        }
+    } else {
+        ctx.print_color(start_x + 2, y, items_fg, bg, empty_text);
     }
 
     match ctx.key {
@@ -193,7 +234,13 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
 
-    ctx.print_color(5, 0, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Select Target:");
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let title_bg = RGB::from_u8(0, 0, 0);
+    let avail_bg = RGB::from_u8(0, 0, 192);
+    let target_valid_bg = RGB::from_u8(192, 0, 0);
+    let target_invalid_bg = RGB::from_u8(192, 192, 192);
+
+    ctx.print_color(5, 0, title_fg, title_bg, "Select Target:");
 
     let visible = viewsheds.get(*player_entity);
     let available_world_cells =
@@ -208,7 +255,7 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
     let available_screen_cells = drawing::world_to_screen_points(&available_world_cells, &gs.ecs, ctx);
 
     for pos in available_screen_cells.iter() {
-        ctx.set_bg(pos.x, pos.y, RGB::named(rltk::BLUE));
+        ctx.set_bg(pos.x, pos.y, avail_bg);
     }
 
     let (mouse_x, mouse_y) = ctx.mouse_pos();
@@ -221,12 +268,12 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
         }
     }
     if valid_target {
-        ctx.set_bg(mouse_x, mouse_y, RGB::named(rltk::CYAN));
+        ctx.set_bg(mouse_x, mouse_y, target_valid_bg);
         if ctx.left_click {
             return (ItemMenuResult::Selected, Some(world_mouse_pos));
         }
     } else {
-        ctx.set_bg(mouse_x, mouse_y, RGB::named(rltk::RED));
+        ctx.set_bg(mouse_x, mouse_y, target_invalid_bg);
         if ctx.left_click {
             return (ItemMenuResult::Cancel, None);
         }
@@ -236,52 +283,67 @@ pub fn ranged_target(gs: &mut State, ctx: &mut Rltk, range: i32) -> (ItemMenuRes
 }
 
 pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
+    let (_, screen_height) = ctx.get_char_size();
+
     let save_exists = super::saveload_system::does_save_exist();
     let runstate = gs.ecs.fetch::<RunState>();
 
-    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "LUNAR DANCE WAR WITH VAMPIRES");
+    let title_bg = RGB::from_u8(0, 0, 0);
+    let unsel_bg = RGB::from_u8(0, 0, 0);
+    let sel_bg = RGB::from_u8(64, 64, 64);
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let continue_game_fg = Health::colour();
+    let new_game_fg = Stamina::colour();
+    let quit_fg = Poise::colour();
+
+    let title_y = (screen_height / 4) as i32;
+    let items_y = (screen_height / 2 - 2) as i32;
+
+    ctx.print_color_centered(title_y, title_fg, title_bg, "LUNAR DANCE WAR WITH VAMPIRES");
 
     if let RunState::MainMenu{ menu_selection: selection } = *runstate {
-        if selection == MainMenuSelection::NewGame {
-            ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Begin New Game");
-        } else {
-            ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Begin New Game");
+        let mut selection = selection;
+        if selection == MainMenuSelection::LoadGame && !save_exists {
+            selection = MainMenuSelection::NewGame;
         }
 
-        if save_exists {
-            if selection == MainMenuSelection::LoadGame {
-                ctx.print_color_centered(25, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Load Game");
-            } else {
-                ctx.print_color_centered(25, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Load Game");
-            }
-        }
+        let mut y = items_y;
 
-        if selection == MainMenuSelection::Quit {
-            ctx.print_color_centered(26, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Quit");
-        } else {
-            ctx.print_color_centered(26, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Quit");
+        let mut fg = continue_game_fg;
+        if !save_exists {
+            fg = fg.to_greyscale();
         }
+        let bg = if selection == MainMenuSelection::LoadGame { sel_bg } else { unsel_bg };
+        ctx.print_color_centered(y, fg, bg, "Continue Game");
+        y += 1;
+
+        let bg = if selection == MainMenuSelection::NewGame { sel_bg } else { unsel_bg };
+        ctx.print_color_centered(y, new_game_fg, bg, "New Game");
+        y += 1;
+
+        let bg = if selection == MainMenuSelection::Quit { sel_bg } else { unsel_bg };
+        ctx.print_color_centered(y, quit_fg, bg, "Quit");
 
         match ctx.key {
             None => return MainMenuResult::NoSelection{ selected: selection },
             Some(key) => {
                 match key {
                     VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: MainMenuSelection::Quit } }
-                    VirtualKeyCode::Up => {
-                        let newselection;
+                    VirtualKeyCode::Up | VirtualKeyCode::K => {
+                        let mut newselection = selection;
                         match selection {
-                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
-                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
-                            MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame
+                            MainMenuSelection::LoadGame => {},
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
                         }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }
-                    VirtualKeyCode::Down => {
-                        let newselection;
+                    VirtualKeyCode::Down | VirtualKeyCode::J => {
+                        let mut newselection = selection;
                         match selection {
-                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
-                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
-                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::Quit => {}
                         }
                         return MainMenuResult::NoSelection{ selected: newselection }
                     }

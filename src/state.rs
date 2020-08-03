@@ -44,6 +44,27 @@ impl State {
 
         self.ecs.insert::<Turn>(0);
         self.ecs.insert(DanceCoordination::new());
+
+        self.intro_log();
+    }
+
+    pub fn reset_world(&mut self) {
+        let mut to_delete: Vec<Entity> = Vec::new();
+        {
+            let entities = self.ecs.entities();
+            for entity in entities.join() {
+                to_delete.push(entity);
+            }
+        }
+
+        for entity in to_delete.iter() {
+            self.ecs.delete_entity(*entity).expect("Unable to delete entity");
+        }
+
+        let mut gamelog = self.ecs.write_resource::<gamelog::GameLog>();
+        gamelog.entries.clear();
+        let mut player_log = self.ecs.write_resource::<gamelog::PlayerLog>();
+        player_log.entries.clear();
     }
 
     pub fn next_turn(&mut self) {
@@ -136,6 +157,11 @@ impl State {
         if let Some(vs) = vs {
             vs.dirty = true;
         }
+    }
+
+    fn intro_log(&mut self) {
+        let mut log = self.ecs.write_resource::<gamelog::GameLog>();
+        log.global(&"Welcome to the moon.");
     }
 
     fn entities_to_remove_on_level_change(&mut self) -> Vec<Entity> {

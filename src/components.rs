@@ -301,7 +301,7 @@ impl Stamina {
     pub const NAME: &'static str = "stamina";
 
     pub fn colour() -> RGB {
-        RGB::named(rltk::BLUE)
+        RGB::from_u8(0, 0, 128)
     }
 }
 

@@ -68,6 +68,8 @@ impl GameState for state::State {
 
         match newrunstate {
             RunState::PreRun => {
+                self.reset_world();
+                self.setup_world();
                 self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
@@ -221,15 +223,12 @@ fn main() -> rltk::BError {
         .build()?;
     let mut gs = state::State::new();
     setup_ecs(&mut gs.ecs);
-    let rng = rltk::RandomNumberGenerator::new();
     gs.ecs.insert(KeyState{ requested_auto_move: false });
-    gs.ecs.insert(rng);
+    gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::LoadGame });
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
-    gs.ecs.insert(RunState::MainMenu { menu_selection: gui::MainMenuSelection::NewGame });
     gs.ecs.insert(gamelog::PlayerLog::new());
-    let mut log = gamelog::GameLog::new();
-    log.global(&"Welcome to the moon.");
-    gs.ecs.insert(log);
+    gs.ecs.insert(gamelog::GameLog::new());
     gs.setup_world();
     rltk::main_loop(context, gs)
 }
