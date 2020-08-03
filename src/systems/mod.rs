@@ -29,6 +29,8 @@ pub mod dancing;
 pub use dancing::{StartDancingSystem, DancingMovementSystem, DancingStatusSystem};
 mod recovery;
 pub use recovery::{RecoverySystem};
+mod noise;
+pub use noise::{NoiseSystem, PlayerListeningSystem};
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()

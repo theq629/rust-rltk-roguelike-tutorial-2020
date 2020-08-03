@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload, SimpleMarker, SimpleMarkerAllocator};
 use rltk::{RGB, Point};
 use specs::error::NoError;
-use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid, factions::Faction, systems::monster_ai_system::MonsterAIState};
+use crate::{dancing::{Dance, Step}, systems::effects::Effect, liquids::Liquid, factions::Faction, systems::monster_ai_system::MonsterAIState, Turn};
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
@@ -311,6 +311,34 @@ impl Stamina {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Resting {}
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct MakeNoise {
+    pub location: Point,
+    pub volume: u32,
+    pub faction: Option<Faction>,
+    pub surprising: bool,
+    pub description: String
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct Noise {
+    pub turn: Turn,
+    pub location: Point,
+    pub lasts: u32,
+    pub volume: u32,
+    pub faction: Option<Faction>,
+    pub surprising: bool,
+    pub description: String,
+    pub player_processed: bool
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct MakesNoise {
+    pub volume: u32,
+    pub surprising: bool,
+    pub description: String
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -356,5 +384,8 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<InFaction>();
     ecs.register::<Stamina>();
     ecs.register::<Resting>();
+    ecs.register::<MakeNoise>();
+    ecs.register::<Noise>();
+    ecs.register::<MakesNoise>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

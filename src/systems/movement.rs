@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{WantsToMove, Position, Viewshed, Map, gamelog::GameLog, text::capitalize, Name};
+use crate::{WantsToMove, Position, Viewshed, Map, gamelog::GameLog, text::capitalize, Name, MakeNoise, factions::Faction};
 
 pub struct MovementSystem {}
 
@@ -15,7 +15,8 @@ impl<'a> System<'a> for MovementSystem {
         WriteStorage<'a, WantsToMove>,
         WriteStorage<'a, Position>,
         WriteStorage<'a, Viewshed>,
-        ReadStorage<'a, Name>
+        ReadStorage<'a, Name>,
+        WriteStorage<'a, MakeNoise>
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -29,13 +30,14 @@ impl<'a> System<'a> for MovementSystem {
             mut wants_to_moves,
             mut positions,
             mut viewsheds,
-            names
+            names,
+            mut make_noises
         ) = data;
 
         for (entity, wants_move, mut pos, name) in (&entities, &wants_to_moves, &mut positions, &names).join() {
             let source_idx = map.point_idx(&wants_move.source);
             let stains = &map.stains[source_idx];
-            let dest =
+            let (dest, did_slip) =
                 if stains.len() > 0 && rng.roll_dice(1, 10) < 5 {
                     let slip_on_i = rng.range(0, stains.len());
                     let mut slip_on = None;
@@ -56,13 +58,33 @@ impl<'a> System<'a> for MovementSystem {
                     );
                     let rand_dest_idx = map.point_idx(&rand_dest);
                     if map.point_valid(&rand_dest) && !map.blocked[rand_dest_idx] {
-                        rand_dest
+                        (rand_dest, true)
                     } else {
-                        Point::new(pos.x, pos.y)
+                        (Point::new(pos.x, pos.y), true)
                     }
                 } else {
-                    wants_move.destination
+                    (wants_move.destination, false)
                 };
+
+            if did_slip {
+                make_noises.insert(entity, MakeNoise {
+                    location: Point::new(pos.x, pos.y),
+                    volume: 32,
+                    faction: Some(Faction::PLAYER),
+                    surprising: false,
+                    description: "something slipping".to_string()
+                }).expect("Failed to insert make noise.");
+            } else {
+                if entity == *player { // don't need to bother with regular movement noises for monsters
+                    make_noises.insert(entity, MakeNoise {
+                        location: Point::new(pos.x, pos.y),
+                        volume: 16,
+                        faction: Some(Faction::PLAYER),
+                        surprising: false,
+                        description: "movement".to_string()
+                    }).expect("Failed to insert make noise.");
+                }
+            }
 
             pos.x = dest.x;
             pos.y = dest.y;

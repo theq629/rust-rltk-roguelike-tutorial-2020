@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise};
 
 pub struct ItemCollectionSystem {}
 
@@ -31,6 +31,7 @@ impl<'a> System<'a> for ItemUseSystem {
     type SystemData = (ReadExpect<'a, Entity>,
                        WriteExpect<'a, Map>,
                        WriteExpect<'a, GameLog>,
+                       ReadExpect<'a, Point>,
                        Entities<'a>,
                        WriteStorage<'a, WantsToUseItem>,
                        ReadStorage<'a, Name>,
@@ -46,17 +47,24 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteStorage<'a, InBackpack>,
                        ReadStorage<'a, Position>,
                        WriteExpect<'a, ParticleBuilder>,
-                       ReadStorage<'a, SpreadsLiquid>);
+                       ReadStorage<'a, SpreadsLiquid>,
+                       WriteStorage<'a, MakeNoise>,
+                       WriteStorage<'a, MakesNoise>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut map, mut gamelog, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders) = data;
+        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises) = data;
 
         for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
+            let targets_centre: Point;
             let mut targets: Vec<Entity> = Vec::new();
             match useitem.target {
-                None => { targets.push(*player_entity); }
+                None => {
+                    targets_centre = player_pos.clone();
+                    targets.push(*player_entity);
+                }
                 Some(target) => {
+                    targets_centre = target.clone();
                     let area_effect = aoe.get(useitem.item);
                     match area_effect {
                         None => {
@@ -160,6 +168,16 @@ impl<'a> System<'a> for ItemUseSystem {
             }
             for mob in add_confusion.iter() {
                 confused.insert(mob.0, Confusion{ turns: mob.1 }).expect("Unable to insert status");
+            }
+
+            if let Some(makes_noise) = makes_noises.get(useitem.item) {
+                make_noises.insert(entity, MakeNoise {
+                    location: targets_centre.clone(),
+                    volume: makes_noise.volume,
+                    faction: None,
+                    surprising: makes_noise.surprising,
+                    description: makes_noise.description.to_string()
+                }).expect("Failed to insert make noise.");
             }
 
             if let Some(spreads_liquid)  = liquid_spreaders.get(useitem.item) {

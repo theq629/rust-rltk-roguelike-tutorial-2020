@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina};
+use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina, MakesNoise};
 
 #[derive(Clone, PartialEq)]
 pub enum Stuff {
@@ -16,6 +16,8 @@ pub enum Stuff {
     FireballScroll,
     ConfusionScroll,
     MagicMissileScroll,
+    Firecracker,
+    Flashbang,
     Dagger,
     Longsword,
     Shield,
@@ -36,6 +38,8 @@ impl Stuff {
             Stuff::FireballScroll => fireball_scroll(ecs, x, y),
             Stuff::ConfusionScroll => confusion_scroll(ecs, x, y),
             Stuff::MagicMissileScroll => magic_missile_scroll(ecs, x, y),
+            Stuff::Firecracker => firecracker(ecs, x, y),
+            Stuff::Flashbang => flashbang(ecs, x, y),
             Stuff::Dagger => dagger(ecs, x, y),
             Stuff::Longsword => longsword(ecs, x, y),
             Stuff::Shield => shield(ecs, x, y),
@@ -253,6 +257,11 @@ pub fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
+        .with(MakesNoise{
+            volume: 64,
+            surprising: true,
+            description: "magic".to_string()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -270,7 +279,57 @@ pub fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
+        .with(MakesNoise{
+            volume: 128,
+            surprising: true,
+            description: "fire".to_string()
+        })
         .with(AreaOfEffect{ radius: 3 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn firecracker(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('?'),
+            fg: RGB::named(rltk::RED),
+            render_order: 2
+        })
+        .with(Name::new_regular("firecracker"))
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 10 })
+        .with(Confusion{ turns: 4 })
+        .with(MakesNoise{
+            volume: 128,
+            surprising: true,
+            description: "a bang".to_string()
+        })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn flashbang(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('?'),
+            fg: RGB::named(rltk::YELLOW),
+            render_order: 2
+        })
+        .with(Name::new_regular("flashbang"))
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 10 })
+        .with(AreaOfEffect{ radius: 6 })
+        .with(Confusion{ turns: 8 })
+        .with(MakesNoise{
+            volume: 256,
+            surprising: true,
+            description: "a loud bang".to_string()
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
