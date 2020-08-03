@@ -64,6 +64,7 @@ impl<'a> System<'a> for StartDancingSystem {
 
             gamelog.on(entity, &format!("{} {} the {} dance.", capitalize(&name.np), name.verb("starts", "start"), want_dance.dance.name()));
             dancers.insert(entity, Dancing {
+                dance: want_dance.dance.clone(),
                 expect_pos: Point::new(pos.x, pos.y),
                 steps: want_dance.dance.steps(),
                 step_idx: 0,

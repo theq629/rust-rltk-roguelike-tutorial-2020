@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode, Rect};
-use super::{Health, Player, gamelog::PlayerLog, Map, Name, Position, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina};
+use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -82,25 +82,25 @@ fn draw_log(ecs: &World, ctx: &mut Rltk) {
 }
 
 fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
+    let (screen_width, screen_height) = ctx.get_char_size();
+
     let map = ecs.fetch::<Map>();
-    let names = ecs.read_storage::<Name>();
-    let positions = ecs.read_storage::<Position>();
 
     let bg = RGB::from_u8(64, 64, 64);
     let fg = RGB::from_u8(192, 192, 192);
     let arrow_fg = RGB::from_u8(255, 255, 255);
 
-    let mouse_pos = ctx.mouse_pos();
-    if mouse_pos.0 >= map.width || mouse_pos.1 >= map.height {
+    let (mouse_x, mouse_y) = ctx.mouse_pos();
+    if mouse_y >= (screen_height - 8) as i32 {
         return;
     }
-    let mut tooltip : Vec<String> = Vec::new();
-    for (name, position) in (&names, &positions).join() {
-        let idx = map.xy_idx(position.x, position.y);
-        if position.x == mouse_pos.0 && position.y == mouse_pos.1 && map.visible_tiles[idx] {
-            tooltip.push(name.name.to_string());
-        }
+
+    let world_mouse_pos = drawing::screen_to_world_point(Point::new(mouse_x, mouse_y), &ecs, ctx);
+    if !map.point_valid(&world_mouse_pos) {
+        return;
     }
+
+    let tooltip = cell_info(&world_mouse_pos, ecs);
 
     if !tooltip.is_empty() {
         let mut width: i32 = 0;
@@ -113,31 +113,23 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
 
         let arrow_pos: Point;
         let arrow: String;
-        let left_x: i32;
-        let pad_start_x: i32;
-        let pad_delta_x: i32;
-        if mouse_pos.0 > 40 {
-            arrow_pos = Point::new(mouse_pos.0 - 2, mouse_pos.1);
+        let box_x: i32;
+        let text_x: i32;
+        if mouse_x > (screen_width / 2) as i32 {
+            arrow_pos = Point::new(mouse_x - 2, mouse_y);
             arrow = "->".to_string();
-            left_x = mouse_pos.0 - width;
-            pad_start_x = arrow_pos.x;
-            pad_delta_x = -1;
+            box_x = mouse_x - width;
+            text_x = mouse_x - width;
         } else {
-            arrow_pos = Point::new(mouse_pos.0 + 1, mouse_pos.1);
+            arrow_pos = Point::new(mouse_x + 1, mouse_y);
             arrow = "<-".to_string();
-            left_x = mouse_pos.0 + 4;
-            pad_start_x = arrow_pos.x + 1;
-            pad_delta_x = 1;
+            box_x = mouse_x + 1;
+            text_x = mouse_x + 4;
         }
-        let mut y = mouse_pos.1;
+        ctx.fill_region(Rect::with_size(box_x, mouse_y, width - 1, (tooltip.len() - 1) as i32), rltk::to_cp437(' '), fg, bg);
+        let mut y = mouse_y;
         for s in tooltip.iter() {
-            ctx.print_color(left_x, y, fg, bg, s);
-            let padding = (width - s.len() as i32) - 1;
-            let mut x = pad_start_x;
-            for _ in 0..padding {
-                ctx.print_color(x, y, fg, bg, &" ".to_string());
-                x += pad_delta_x;
-            }
+            ctx.print_color(text_x, y, fg, bg, s);
             y += 1;
         }
         ctx.print_color(arrow_pos.x, arrow_pos.y, arrow_fg, bg, &arrow);

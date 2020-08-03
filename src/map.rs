@@ -15,6 +15,16 @@ pub enum TileType {
     Wall, Floor, DownStairs
 }
 
+impl TileType {
+    pub fn name(self) -> String {
+        match self {
+            TileType::Wall => "wall".to_string(),
+            TileType::Floor => "floor".to_string(),
+            TileType::DownStairs => "stairs down".to_string()
+        }
+    }
+}
+
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
     pub tiles: Vec<TileType>,

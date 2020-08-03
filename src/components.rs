@@ -233,6 +233,7 @@ pub struct CanDoDances {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Dancing {
+    pub dance: Dance,
     pub expect_pos: Point,
     pub steps: Vec<Step>,
     pub step_idx: u32,

@@ -25,6 +25,7 @@ mod state;
 use state::{Turn};
 mod text;
 mod factions;
+mod cellinfo;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
