@@ -65,13 +65,7 @@ impl<'a> System<'a> for MonsterAISystem {
             }
 
             // Handle confusion
-            let is_confused = confused.get_mut(entity);
-            if let Some(i_am_confused) = is_confused {
-                i_am_confused.turns -= 1;
-                if i_am_confused.turns < 1 {
-                    confused.remove(entity);
-                }
-                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
+            if let Some(_) = confused.get_mut(entity) {
                 continue;
             }
 

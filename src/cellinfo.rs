@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Map, Name, Position, Dancing, MonsterAI, systems::monster_ai_system::{MonsterAIState, MovementGoal}};
+use crate::{Map, Name, Position, Dancing, MonsterAI, systems::monster_ai_system::{MonsterAIState, MovementGoal}, Confusion};
 
 pub fn cell_info(cell: &Point, ecs: &World) -> Vec<String> {
     let map = ecs.fetch::<Map>();
@@ -9,6 +9,7 @@ pub fn cell_info(cell: &Point, ecs: &World) -> Vec<String> {
     let positions = ecs.read_storage::<Position>();
     let dancing = ecs.read_storage::<Dancing>();
     let monster_ai = ecs.read_storage::<MonsterAI>();
+    let confusion = ecs.read_storage::<Confusion>();
     let pos_idx = map.xy_idx(cell.x, cell.y);
 
     let mut items = Vec::<String>::new();
@@ -20,22 +21,29 @@ pub fn cell_info(cell: &Point, ecs: &World) -> Vec<String> {
             if let Some(dancing) = dancing.get(entity) {
                 name = format!("{} (doing the {} dance)", name, dancing.dance.name());
             }
+            let mut ai_info = Vec::new();
             if let Some(MonsterAI { state, .. }) = monster_ai.get(entity) {
                 match state {
                     MonsterAIState::RESTING => {
-                        name = format!("{} (resting)", name);
+                        ai_info.push("resting".to_string());
                     }
                     MonsterAIState::AGGRESSIVE => {
-                        name = format!("{} (aggressive)", name);
+                        ai_info.push("aggressive".to_string());
                     }
                     MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => {
-                        name = format!("{} (fleeing)", name);
+                        ai_info.push("fleeing".to_string());
                     }
                     MonsterAIState::MOVING { .. } => {
-                        name = format!("{} (moving)", name);
+                        ai_info.push("moving".to_string());
                     }
                     _ => {}
                 }
+            }
+            if let Some(_) = confusion.get(entity) {
+                ai_info.push("confused".to_string());
+            }
+            if ai_info.len() > 0 {
+                name = format!("{} ({})", name, ai_info.join(", "));
             }
             #[cfg(debug_assertions)]
             if let Some(MonsterAI { state, .. }) = monster_ai.get(entity) {

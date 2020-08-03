@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances, Stamina, dancing::Dance};
+use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances, Stamina, dancing::Dance, Confusion};
 
 pub struct StartDancingSystem {}
 
@@ -14,7 +14,8 @@ impl<'a> System<'a> for StartDancingSystem {
         ReadStorage<'a, Name>,
         WriteStorage<'a, Dancing>,
         ReadStorage<'a, Stamina>,
-        ReadStorage<'a, Poise>
+        ReadStorage<'a, Poise>,
+        ReadStorage<'a, Confusion>
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -26,10 +27,15 @@ impl<'a> System<'a> for StartDancingSystem {
             names,
             mut dancers,
             stamina,
-            poise
+            poise,
+            confusion
         ) = data;
 
         for (entity, pos, want_dance, name) in (&entities, &positions, &want_to_dancers, &names).join() {
+            if let Some(_) = confusion.get(entity) {
+                gamelog.on(entity, &format!("{} {} too confused to dance.", capitalize(&name.np), name.verb("is", "are")));
+                continue;
+            }
             if let Some(stamina) = stamina.get(entity) {
                 if stamina.stamina <= 0 {
                     gamelog.on(entity, &format!("{} {} too tired to dance.", capitalize(&name.np), name.verb("is", "are")));
@@ -76,10 +82,11 @@ impl<'a> System<'a> for DancingMovementSystem {
                        ReadStorage<'a, Name>,
                        ReadStorage<'a, CanDoDances>,
                        WriteStorage<'a, Stamina>,
-                       WriteStorage<'a, Poise>);
+                       WriteStorage<'a, Poise>,
+                       WriteStorage<'a, Confusion>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina, mut poise) = data;
+        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina, mut poise, confusion) = data;
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, mut dancer, mut stamina, name, mut poise) in (&entities, &pos, &mut dancers, &mut stamina, &names, &mut poise).join() {
@@ -93,6 +100,12 @@ impl<'a> System<'a> for DancingMovementSystem {
                 }
             }
 
+            if let Some(_) = confusion.get(entity) {
+                gamelog.on(entity, &format!("{} {} too confused to continue dancing (1 {}).", capitalize(&name.np), name.verb("is", "are"), Poise::NAME));
+                poise.poise = i32::max(0, poise.poise - 1);
+                to_stop.push(entity);
+                continue;
+            }
             if stamina.stamina <= 0 {
                 gamelog.on(entity, &format!("{} {} too tired to continue dancing (1 {}).", capitalize(&name.np), name.verb("is", "are"), Poise::NAME));
                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);

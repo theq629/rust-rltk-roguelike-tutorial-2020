@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{WantsToMove, Position, Viewshed, Map, gamelog::GameLog, text::capitalize, Name, MakeNoise, factions::Faction};
+use crate::{WantsToMove, Position, Viewshed, Map, gamelog::GameLog, text::capitalize, Name, MakeNoise, factions::Faction, Confusion};
 
 pub struct MovementSystem {}
 
@@ -16,7 +16,8 @@ impl<'a> System<'a> for MovementSystem {
         WriteStorage<'a, Position>,
         WriteStorage<'a, Viewshed>,
         ReadStorage<'a, Name>,
-        WriteStorage<'a, MakeNoise>
+        WriteStorage<'a, MakeNoise>,
+        ReadStorage<'a, Confusion>
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -31,7 +32,8 @@ impl<'a> System<'a> for MovementSystem {
             mut positions,
             mut viewsheds,
             names,
-            mut make_noises
+            mut make_noises,
+            confusion
         ) = data;
 
         for (entity, wants_move, mut pos, name) in (&entities, &wants_to_moves, &mut positions, &names).join() {
@@ -66,6 +68,8 @@ impl<'a> System<'a> for MovementSystem {
                     (wants_move.destination, false)
                 };
 
+            let is_confused = match confusion.get(entity) { Some(_) => true, _ => false };
+
             if did_slip {
                 make_noises.insert(entity, MakeNoise {
                     location: Point::new(pos.x, pos.y),
@@ -74,7 +78,7 @@ impl<'a> System<'a> for MovementSystem {
                     surprising: false,
                     description: "something slipping".to_string()
                 }).expect("Failed to insert make noise.");
-            } else {
+            } else if !is_confused {
                 if entity == *player { // don't need to bother with regular movement noises for monsters
                     make_noises.insert(entity, MakeNoise {
                         location: Point::new(pos.x, pos.y),

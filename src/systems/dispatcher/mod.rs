@@ -40,7 +40,9 @@ construct_dispatcher!(
         with (VisibilitySystem, "visibility", &[])
         with (StartDancingSystem, "start_dancing", &[])
         with (RecoverySystem, "recovery", &[])
+        barrier
         with (NoiseSystem, "noise", &[])
+        with (ConfusionSystem, "confusion", &[])
         barrier
         with (DancingStatusSystem, "dancing_status", &[])
         with (PlayerListeningSystem, "player_listening", &[])

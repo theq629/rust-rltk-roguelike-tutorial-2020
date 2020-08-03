@@ -31,6 +31,8 @@ mod recovery;
 pub use recovery::{RecoverySystem};
 mod noise;
 pub use noise::{NoiseSystem, PlayerListeningSystem};
+mod confusion;
+pub use confusion::{ConfusionSystem};
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
     dispatcher::new()

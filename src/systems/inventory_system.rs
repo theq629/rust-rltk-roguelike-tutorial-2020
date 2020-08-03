@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player};
 
 pub struct ItemCollectionSystem {}
 
@@ -49,10 +49,12 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteExpect<'a, ParticleBuilder>,
                        ReadStorage<'a, SpreadsLiquid>,
                        WriteStorage<'a, MakeNoise>,
-                       WriteStorage<'a, MakesNoise>);
+                       WriteStorage<'a, MakesNoise>,
+                       ReadStorage<'a, Monster>,
+                       ReadStorage<'a, Player>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises) = data;
+        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players) = data;
 
         for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
@@ -71,7 +73,11 @@ impl<'a> System<'a> for ItemUseSystem {
                             target_tiles.push(target.clone());
                             let idx = map.xy_idx(target.x, target.y);
                             for mob in map.tile_content[idx].iter() {
-                                targets.push(*mob);
+                                match (monsters.get(*mob), players.get(*mob)) {
+                                    (Some(_), _) => targets.push(*mob),
+                                    (_, Some(_)) => targets.push(*mob),
+                                    _ => {}
+                                }
                             }
                         }
                         Some(area_effect) => {
@@ -80,7 +86,11 @@ impl<'a> System<'a> for ItemUseSystem {
                             for tile_idx in target_tiles.iter() {
                                 let idx = map.xy_idx(tile_idx.x, tile_idx.y);
                                 for mob in map.tile_content[idx].iter() {
-                                    targets.push(*mob);
+                                    match (monsters.get(*mob), players.get(*mob)) {
+                                        (Some(_), _) => targets.push(*mob),
+                                        (_, Some(_)) => targets.push(*mob),
+                                        _ => {}
+                                    }
                                 }
                                 particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::to_cp437('░'), 200.0);
                             }
@@ -159,9 +169,6 @@ impl<'a> System<'a> for ItemUseSystem {
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
                             gamelog.on(entity, &format!("{} {} {} on {}, confusing {}.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np, mob_name.pronoun));
-                            if let Some(pos) = positions.get(*mob) {
-                                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
-                            }
                         }
                     }
                 }

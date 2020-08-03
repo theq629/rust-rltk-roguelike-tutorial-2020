@@ -55,7 +55,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
             fg: RGB::named(rltk::YELLOW),
-            render_order: 0
+            render_order: 1
         })
         .with(Player{})
         .with(BlocksTile{})
@@ -88,7 +88,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('V'),
             fg: RGB::named(rltk::WHITE),
-            render_order: 1
+            render_order: 2
         })
         .with(Monster{})
         .with(MonsterAI::new())
@@ -114,7 +114,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('v'),
             fg: RGB::named(rltk::WHITE),
-            render_order: 1
+            render_order: 2
         })
         .with(Monster{})
         .with(MonsterAI::new())
@@ -140,7 +140,7 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('r'),
             fg: RGB::named(rltk::WHITE),
-            render_order: 1
+            render_order: 2
         })
         .with(Monster{})
         .with(MonsterAI::new())
@@ -165,7 +165,7 @@ pub fn oil_dart(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::GREY),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("oil dart"))
         .with(Item{})
@@ -182,7 +182,7 @@ pub fn oil_balloon(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('!'),
             fg: RGB::named(rltk::GREY),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("oil balloon"))
         .with(Item{})
@@ -200,7 +200,7 @@ pub fn blood_dart(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::RED),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("blood dart"))
         .with(Item{})
@@ -217,7 +217,7 @@ pub fn blood_balloon(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('!'),
             fg: RGB::named(rltk::RED),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("blood balloon"))
         .with(Item{})
@@ -235,7 +235,7 @@ pub fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('¡'),
             fg: RGB::named(rltk::MAGENTA),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("health potion"))
         .with(Item{})
@@ -251,7 +251,7 @@ pub fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::CYAN),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("magic missile scroll"))
         .with(Item{})
@@ -273,7 +273,7 @@ pub fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::ORANGE),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("fireball scroll"))
         .with(Item{})
@@ -296,7 +296,7 @@ pub fn firecracker(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('?'),
             fg: RGB::named(rltk::RED),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("firecracker"))
         .with(Item{})
@@ -318,7 +318,7 @@ pub fn flashbang(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('?'),
             fg: RGB::named(rltk::YELLOW),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("flashbang"))
         .with(Item{})
@@ -341,7 +341,7 @@ pub fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437(')'),
             fg: RGB::named(rltk::PINK),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("confusion"))
         .with(Item{})
@@ -358,7 +358,7 @@ pub fn dagger(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::CYAN),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("dagger"))
         .with(Item{})
@@ -374,7 +374,7 @@ pub fn longsword(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('/'),
             fg: RGB::named(rltk::YELLOW),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("longsword"))
         .with(Item{})
@@ -390,7 +390,7 @@ pub fn shield(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('('),
             fg: RGB::named(rltk::CYAN),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("shield"))
         .with(Item{})
@@ -406,7 +406,7 @@ pub fn tower_shield(ecs: &mut World, x: i32, y: i32) {
         .with(Renderable{
             glyph: rltk::to_cp437('('),
             fg: RGB::named(rltk::YELLOW),
-            render_order: 2
+            render_order: 3
         })
         .with(Name::new_regular("tower shield"))
         .with(Item{})

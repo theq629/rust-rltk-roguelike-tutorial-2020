@@ -105,14 +105,18 @@ impl GameState for state::State {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
-                        let item_entity = result.1.unwrap();
-                        let is_ranged = self.ecs.read_storage::<Ranged>();
-                        let is_item_ranged = is_ranged.get(item_entity);
-                        if let Some(is_item_ranged) = is_item_ranged {
-                            newrunstate = RunState::ShowTargeting{ range: is_item_ranged.range, item: item_entity };
+                        if player_can_act(&mut self.ecs) {
+                            let item_entity = result.1.unwrap();
+                            let is_ranged = self.ecs.read_storage::<Ranged>();
+                            let is_item_ranged = is_ranged.get(item_entity);
+                            if let Some(is_item_ranged) = is_item_ranged {
+                                newrunstate = RunState::ShowTargeting{ range: is_item_ranged.range, item: item_entity };
+                            } else {
+                                let mut intent = self.ecs.write_storage::<WantsToUseItem>();
+                                intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity, target: None }).expect("Unable to insert intent");
+                                newrunstate = RunState::PlayerTurn;
+                            }
                         } else {
-                            let mut intent = self.ecs.write_storage::<WantsToUseItem>();
-                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity, target: None }).expect("Unable to insert intent");
                             newrunstate = RunState::PlayerTurn;
                         }
                     }
@@ -124,9 +128,11 @@ impl GameState for state::State {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {},
                     gui::ItemMenuResult::Selected => {
-                        let item_entity = result.1.unwrap();
-                        let mut intent = self.ecs.write_storage::<WantsToDropItem>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDropItem{ item: item_entity }).expect("Unable to insert intent");
+                        if player_can_act(&mut self.ecs) {
+                            let item_entity = result.1.unwrap();
+                            let mut intent = self.ecs.write_storage::<WantsToDropItem>();
+                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToDropItem{ item: item_entity }).expect("Unable to insert intent");
+                        }
                         newrunstate = RunState::PlayerTurn;
                     }
                 }
@@ -149,9 +155,11 @@ impl GameState for state::State {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
-                        let item_entity = result.1.unwrap();
-                        let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        if player_can_act(&mut self.ecs) {
+                            let item_entity = result.1.unwrap();
+                            let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
+                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        }
                         newrunstate = RunState::PlayerTurn;
                     }
                 }
@@ -163,11 +171,13 @@ impl GameState for state::State {
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
                         let dance = result.1.unwrap().clone();
-                        let mut intent = self.ecs.write_storage::<WantsToDance>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDance{
-                            dance: dance,
-                            repetitions: 1 as u32
-                        }).expect("Unable to insert intent");
+                        if player_can_act(&mut self.ecs) {
+                            let mut intent = self.ecs.write_storage::<WantsToDance>();
+                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToDance{
+                                dance: dance,
+                                repetitions: 1 as u32
+                            }).expect("Unable to insert intent");
+                        }
                         newrunstate = RunState::PlayerTurn;
                     }
                 }

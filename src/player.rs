@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, systems::auto_movement_system, WantsToMove, Resting}; 
+use super::{state::State, Position, Player, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, systems::auto_movement_system, WantsToMove, Resting, Confusion}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -9,12 +9,32 @@ pub struct KeyState {
 
 fn skip_turn(ecs: &mut World) -> RunState {
     let player_entity = ecs.fetch::<Entity>();
-    let mut resting = ecs.write_storage::<Resting>();
-    resting.insert(*player_entity, Resting {}).expect("Failed to insert resting.");
+    let confusion = ecs.read_storage::<Confusion>();
+    if let Some(_) = confusion.get(*player_entity) {
+        let mut resting = ecs.write_storage::<Resting>();
+        resting.insert(*player_entity, Resting {}).expect("Failed to insert resting.");
+    }
     RunState::PlayerTurn
 }
 
+pub fn player_can_act(ecs: &mut World) -> bool {
+    let player_entity = *ecs.fetch::<Entity>();
+    let confusion = ecs.read_storage::<Confusion>();
+
+    if let Some(_) = confusion.get(player_entity) {
+        let mut player_log = ecs.fetch_mut::<PlayerLog>();
+        player_log.insert(&"You are confused and cannot act.".to_string());
+        false
+    } else {
+        true
+    }
+}
+
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
+    if !player_can_act(ecs) {
+        return;
+    }
+
     let mut auto_move = false;
     {
         let mut state = ecs.fetch_mut::<KeyState>();
