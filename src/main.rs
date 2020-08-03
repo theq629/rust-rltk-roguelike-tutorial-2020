@@ -18,7 +18,6 @@ mod gamelog;
 mod stuff;
 mod spawner;
 mod saveload_system;
-mod random_table;
 mod systems;
 use systems::damage_system::{delete_the_dead};
 mod state;

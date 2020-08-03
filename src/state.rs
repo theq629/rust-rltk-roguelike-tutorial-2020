@@ -36,9 +36,7 @@ impl State {
         self.ecs.insert(Point::new(player_x, player_y));
         self.ecs.insert(player_entity);
 
-        for room in map.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, 1);
-        }
+        spawner::spawn(&mut self.ecs, &map.rooms, 1);
 
         self.ecs.insert(map);
 
@@ -87,9 +85,7 @@ impl State {
             worldmap = worldmap_resource.clone();
         }
 
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, current_depth+1);
-        }
+        spawner::spawn(&mut self.ecs, &worldmap.rooms, current_depth+1);
 
         let (player_x, player_y) = worldmap.rooms[0].centre();
         let mut player_position = self.ecs.write_resource::<Point>();
@@ -134,9 +130,7 @@ impl State {
             worldmap = worldmap_resource.clone();
         }
 
-        for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, 1);
-        }
+        spawner::spawn(&mut self.ecs, &worldmap.rooms, 1);
 
         let (player_x, player_y) = worldmap.rooms[0].centre();
         let player_entity = stuff::player(&mut self.ecs, player_x, player_y);

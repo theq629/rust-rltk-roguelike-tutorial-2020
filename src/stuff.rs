@@ -3,6 +3,47 @@ use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
 use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina};
 
+#[derive(Clone, PartialEq)]
+pub enum Stuff {
+    Thrall,
+    Vampire,
+    Rabbit,
+    BloodDart,
+    BloodBalloon,
+    OilDart,
+    OilBalloon,
+    HealthPotion,
+    FireballScroll,
+    ConfusionScroll,
+    MagicMissileScroll,
+    Dagger,
+    Longsword,
+    Shield,
+    TowerShield,
+}
+
+impl Stuff {
+    pub fn spawn(&self, ecs: &mut World, x: i32, y: i32) {
+        match self {
+            Stuff::Thrall => thrall(ecs, x, y),
+            Stuff::Vampire => vampire(ecs, x, y),
+            Stuff::Rabbit => rabbit(ecs, x, y),
+            Stuff::BloodDart => blood_dart(ecs, x, y),
+            Stuff::BloodBalloon => blood_balloon(ecs, x, y),
+            Stuff::OilDart => oil_dart(ecs, x, y),
+            Stuff::OilBalloon => oil_balloon(ecs, x, y),
+            Stuff::HealthPotion => health_potion(ecs, x, y),
+            Stuff::FireballScroll => fireball_scroll(ecs, x, y),
+            Stuff::ConfusionScroll => confusion_scroll(ecs, x, y),
+            Stuff::MagicMissileScroll => magic_missile_scroll(ecs, x, y),
+            Stuff::Dagger => dagger(ecs, x, y),
+            Stuff::Longsword => longsword(ecs, x, y),
+            Stuff::Shield => shield(ecs, x, y),
+            Stuff::TowerShield => tower_shield(ecs, x, y),
+        }
+    }
+}
+
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
     ecs
         .create_entity()

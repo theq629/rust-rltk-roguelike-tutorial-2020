@@ -1,71 +1,80 @@
-use rltk::{RandomNumberGenerator};
+use rltk::{RandomNumberGenerator, Point};
 use specs::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashSet};
 use super::map::{MAPWIDTH};
 use super::rect::{Rect};
-use super::{random_table::RandomTable};
-use super::stuff::*;
+use super::stuff::Stuff;
 
-const MAX_MONSTERS: i32 = 4;
+pub fn spawn(ecs: &mut World, rooms: &Vec<Rect>, map_depth: i32) {
+    let start_rooms = rooms[0..1].to_vec();
+    let other_rooms = rooms[1..].to_vec();
+    spawn_rooms(ecs, start_rooms, start_room_table(map_depth));
+    spawn_rooms(ecs, other_rooms, floor_table(map_depth));
+}
 
-pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
-    let spawn_table = room_table(map_depth);
-    let mut spawn_points: HashMap<usize, String> = HashMap::new();
+fn spawn_rooms(ecs: &mut World, rooms: Vec<Rect>, spawn_table: Vec<(Stuff, i32, i32)>) {
+    let mut to_spawn: Vec<(Stuff, Point)> = Vec::new();
+    let mut spawn_points: HashSet<usize> = HashSet::new();
 
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        let num_spans = rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3;
 
-        for _ in 0 .. num_spans {
-            let mut added = false;
-            let mut tries = 0;
-            while !added && tries < 20 {
-                let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
-                let y = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
-                let idx = (y * MAPWIDTH) + x;
-                if !spawn_points.contains_key(&idx) {
-                    spawn_points.insert(idx, spawn_table.roll(&mut rng));
-                    added = true;
-                } else {
+        for (stuff, min_num, max_num) in spawn_table {
+            let num = rng.range(min_num, max_num + 1);
+            for _ in 0..num {
+                let mut tries = 0;
+                loop {
+                    let room_idx = rng.range(0, rooms.len());
+                    let room = &rooms[room_idx];
+                    let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+                    let y = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+                    let idx = (y * MAPWIDTH) + x;
+                    if !spawn_points.contains(&idx) || tries >= 10 {
+                        to_spawn.push((stuff.clone(), Point::new(x, y)));
+                        break;
+                    }
+                    spawn_points.insert(idx);
                     tries += 1;
                 }
             }
         }
     }
 
-    for spawn in spawn_points.iter() {
-        let x = (*spawn.0 % MAPWIDTH) as i32;
-        let y = (*spawn.0 / MAPWIDTH) as i32;
-
-        match spawn.1.as_ref() {
-            "Thrall" => thrall(ecs, x, y),
-            "Vampire" => vampire(ecs, x, y),
-            "Rabbit" => rabbit(ecs, x, y),
-            "Blood Dart" => blood_dart(ecs, x, y),
-            "Blood Balloon" => blood_balloon(ecs, x, y),
-            "Oil Dart" => oil_dart(ecs, x, y),
-            "Oil Balloon" => oil_balloon(ecs, x, y),
-            "Health Potion" => health_potion(ecs, x, y),
-            "Fireball Scroll" => fireball_scroll(ecs, x, y),
-            "Confusion Scroll" => confusion_scroll(ecs, x, y),
-            "Magic Missile Scroll" => magic_missile_scroll(ecs, x, y),
-            "Dagger" => dagger(ecs, x, y),
-            "Longsword" => longsword(ecs, x, y),
-            "Shield" => shield(ecs, x, y),
-            "Tower Shield" => tower_shield(ecs, x, y),
-            _ => {}
-        }
+    for (stuff, point) in to_spawn {
+        stuff.spawn(ecs, point.x, point.y);
     }
 }
 
-fn room_table(map_depth: i32) -> RandomTable {
-    RandomTable::new()
-        .add("Rabbit", 100)
-        .add("Thrall", 50)
-        .add("Vampire", 25)
-        .add("Blood Dart", 50)
-        .add("Blood Balloon", 50)
-        .add("Oil Dart", 50)
-        .add("Oil Balloon", 50)
-        .add("Health Potion", 7 + map_depth)
+fn floor_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
+    vec![
+        (Stuff::Rabbit, 20, 50),
+        (Stuff::Thrall, 10, 20),
+        (Stuff::Vampire, 5, 10),
+        (Stuff::BloodDart, 1, 5),
+        (Stuff::BloodBalloon, 1, 5),
+        (Stuff::OilDart, 1, 5),
+        (Stuff::OilBalloon, 1, 5),
+        (Stuff::HealthPotion, 1, 5),
+        (Stuff::Dagger, 1, 5),
+        (Stuff::Shield, 1, 5),
+        (Stuff::Longsword, 0 + map_depth, 1 + map_depth),
+        (Stuff::TowerShield, 0 + map_depth, 1 + map_depth),
+    ]
+}
+
+fn start_room_table(_map_depth: i32) -> Vec<(Stuff, i32, i32)> {
+    vec![
+        (Stuff::BloodDart, 3, 5),
+        (Stuff::BloodBalloon, 3, 5),
+        (Stuff::OilDart, 3, 5),
+        (Stuff::OilBalloon, 3, 5),
+        (Stuff::HealthPotion, 3, 5),
+        (Stuff::FireballScroll, 3, 5),
+        (Stuff::ConfusionScroll, 3, 5),
+        (Stuff::MagicMissileScroll, 3, 5),
+        (Stuff::Dagger, 1, 1),
+        (Stuff::Shield, 1, 1),
+        (Stuff::Longsword, 1, 1),
+        (Stuff::TowerShield, 1, 1),
+    ]
 }
