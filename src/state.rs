@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use super::{systems, gamelog, spawner, stuff};
+use super::{systems, gamelog, spawner, stuff, systems::dancing::DanceCoordination};
 use super::map::{Map};
 use super::components::*;
 
@@ -43,6 +43,7 @@ impl State {
         self.ecs.insert(map);
 
         self.ecs.insert::<Turn>(0);
+        self.ecs.insert(DanceCoordination::new());
     }
 
     pub fn next_turn(&mut self) {

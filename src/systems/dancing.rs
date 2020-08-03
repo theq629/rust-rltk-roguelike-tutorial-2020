@@ -1,12 +1,31 @@
+use std::collections::HashSet;
 use specs::prelude::*;
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances, Stamina};
+use crate::{Position, WantsToDance, Name, Dancing, gamelog::GameLog, text::capitalize, Map, RunState, Player, Monster, systems::particle_system::ParticleBuilder, EffectRequest, WantsToMove, Poise, CanDoDances, Stamina, dancing::Dance};
+
+pub struct DanceEvent {
+    pub dancer: Entity,
+    pub range: HashSet::<Point>
+}
+
+pub struct DanceCoordination {
+    pub events: Vec::<DanceEvent>
+}
+
+impl DanceCoordination {
+    pub fn new() -> Self {
+        DanceCoordination {
+            events: Vec::new()
+        }
+    }
+}
 
 pub struct StartDancingSystem {}
 
 impl<'a> System<'a> for StartDancingSystem {
     type SystemData = (
         WriteExpect<'a, GameLog>,
+        WriteExpect<'a, DanceCoordination>,
         Entities<'a>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, WantsToDance>,
@@ -19,6 +38,7 @@ impl<'a> System<'a> for StartDancingSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             mut gamelog,
+            mut dance_coord,
             entities,
             positions,
             mut want_to_dancers,
@@ -49,6 +69,11 @@ impl<'a> System<'a> for StartDancingSystem {
                 step_idx: 0,
                 repetitions: want_dance.repetitions
             }).expect("Failed to insert dancing.");
+
+            dance_coord.events.push(DanceEvent {
+                dancer: entity.clone(),
+                range: get_dance_range(&want_dance.dance, &Point::new(pos.x, pos.y))
+            });
         }
 
         want_to_dancers.clear();
@@ -62,6 +87,7 @@ impl<'a> System<'a> for DancingMovementSystem {
                        ReadExpect<'a, RunState>,
                        WriteExpect<'a, RandomNumberGenerator>,
                        WriteExpect<'a, GameLog>,
+                       WriteExpect<'a, DanceCoordination>,
                        Entities<'a>,
                        ReadStorage<'a, Position>,
                        ReadStorage<'a, Player>,
@@ -76,7 +102,7 @@ impl<'a> System<'a> for DancingMovementSystem {
                        WriteStorage<'a, Poise>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, runstate, mut rng, mut gamelog, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina, mut poise) = data;
+        let (map, runstate, mut rng, mut gamelog, mut dance_coord, entities, pos, players, monsters, mut particle_builder, mut dancers, mut effect_requests, mut wants_to_moves, names, can_do_dances, mut stamina, mut poise) = data;
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, mut dancer, mut stamina, name, mut poise) in (&entities, &pos, &mut dancers, &mut stamina, &names, &mut poise).join() {
@@ -129,6 +155,9 @@ impl<'a> System<'a> for DancingMovementSystem {
             }
         }
 
+        dance_coord.events.retain(|event| {
+            !to_stop.contains(&event.dancer)
+        });
         for entity in to_stop {
             dancers.remove(entity);
         }
@@ -139,6 +168,7 @@ pub struct DancingStatusSystem {}
 
 impl<'a> System<'a> for DancingStatusSystem {
     type SystemData = (WriteExpect<'a, GameLog>,
+                       WriteExpect<'a, DanceCoordination>,
                        Entities<'a>,
                        ReadStorage<'a, Position>,
                        WriteExpect<'a, ParticleBuilder>,
@@ -147,7 +177,7 @@ impl<'a> System<'a> for DancingStatusSystem {
                        WriteStorage<'a, Poise>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut gamelog, entities, pos, mut particle_builder, mut dancers, names, mut poise) = data;
+        let (mut gamelog, mut dance_coord, entities, pos, mut particle_builder, mut dancers, names, mut poise) = data;
 
         let mut to_stop: Vec<Entity> = Vec::new();
         for (entity, pos, mut dancer, name, mut poise) in (&entities, &pos, &mut dancers, &names, &mut poise).join() {
@@ -170,8 +200,22 @@ impl<'a> System<'a> for DancingStatusSystem {
             }
         }
 
+        dance_coord.events.retain(|event| {
+            !to_stop.contains(&event.dancer)
+        });
         for entity in to_stop {
             dancers.remove(entity);
         }
     }
+}
+
+fn get_dance_range(dance: &Dance, start: &Point) -> HashSet<Point> {
+    let mut range = HashSet::new();
+    let mut at = *start;
+    range.insert(at);
+    for step in dance.steps().iter() {
+        at = at + step.direction;
+        range.insert(at);
+    }
+    return range;
 }

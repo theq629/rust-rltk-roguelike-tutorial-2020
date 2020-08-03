@@ -56,7 +56,7 @@ impl Map {
             blocked: vec![false; MAPCOUNT],
             tile_content: vec![Vec::new(); MAPCOUNT],
             depth: new_depth,
-            stains: vec![HashSet::new(); MAPCOUNT],
+            stains: vec![HashSet::new(); MAPCOUNT]
         };
 
         const MAX_ROOMS: i32 = 30;

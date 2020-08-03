@@ -25,7 +25,7 @@ mod movement;
 pub use movement::MovementSystem;
 mod log_updater;
 pub use log_updater::LogUpdaterSystem;
-mod dancing;
+pub mod dancing;
 pub use dancing::{StartDancingSystem, DancingMovementSystem, DancingStatusSystem};
 mod recovery;
 pub use recovery::{RecoverySystem};

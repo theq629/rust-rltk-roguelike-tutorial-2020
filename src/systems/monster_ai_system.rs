@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting};
+use crate::{Map, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting, systems::dancing::DanceCoordination};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct PathInfo {
@@ -13,7 +13,8 @@ pub struct PathInfo {
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub enum MovementGoal {
     Flee,
-    SeekEnemy
+    SeekEnemy,
+    GoDance { dance: dancing::Dance, destination: Point }
 }
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
@@ -33,6 +34,7 @@ impl<'a> System<'a> for MonsterAISystem {
                        ReadExpect<'a, Entity>,
                        ReadExpect<'a, RunState>,
                        WriteExpect<'a, GameLog>,
+                       ReadExpect<'a, DanceCoordination>,
                        Entities<'a>,
                        WriteStorage<'a, Viewshed>,
                        ReadStorage<'a, Position>,
@@ -54,11 +56,11 @@ impl<'a> System<'a> for MonsterAISystem {
                        WriteStorage<'a, Resting>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (map, player_pos, player_entity, runstate, mut gamelog, entities, viewshed, pos, mut confused, monster, mut monster_ai, mut wants_to_melee, mut particle_builder, dancers, mut rng, can_do_dances, has_agroed, mut wants_to_moves, mut want_to_dancers, health, stamina, poise, names, mut resting) = data;
+        let (map, player_pos, player_entity, runstate, mut gamelog, dance_coord, entities, viewsheds, pos, mut confused, monster, mut monster_ai, mut wants_to_melee, mut particle_builder, dancers, mut rng, can_do_dances, has_agroed, mut wants_to_moves, mut want_to_dancers, health, stamina, poise, names, mut resting) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
-        for (entity, viewshed, pos, _monster, ai, health, stamina, poise, name) in (&entities, &viewshed, &pos, &monster, &mut monster_ai, &health, &stamina, &poise, &names).join() {
+        for (entity, viewshed, pos, _monster, ai, health, stamina, poise, name) in (&entities, &viewsheds, &pos, &monster, &mut monster_ai, &health, &stamina, &poise, &names).join() {
             if let Some(_) = dancers.get(entity) {
                 continue;
             }
@@ -92,7 +94,9 @@ impl<'a> System<'a> for MonsterAISystem {
             let enemy_in_sight = viewshed.visible_tiles.contains(&*player_pos);
             if enemy_in_sight {
                 ai.last_saw_enemy = Some(player_pos.clone());
-                if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::Flee, path: _ } => true, _ => false } {
+                if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => true, _ => false } {
+                    // no change
+                } else if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => true, _ => false } {
                     // no change
                 } else if health.health < health.max_health / 10 {
                     particle_builder.request(pos.x, pos.y, Health::colour(), rltk::to_cp437('‼'), 200.0);
@@ -120,10 +124,27 @@ impl<'a> System<'a> for MonsterAISystem {
                         new_state = MonsterAIState::AGGRESSIVE;
                     } else {
                         if let Some(can) = can_do_dances.get(entity) {
-                            let i = rng.range(0, can.dances.len());
-                            new_state = MonsterAIState::DANCING {
-                                dance: can.dances[i].clone()
-                            };
+                            let range =
+                                if let Some(player_vs) = viewsheds.get(*player_entity) {
+                                    &player_vs.visible_tiles
+                                } else {
+                                    &viewshed.visible_tiles
+                                };
+                            for _ in 0..can.dances.len() {
+                                let i = rng.range(0, can.dances.len());
+                                let dance = can.dances[i].clone();
+                                let start_pos = look_for_dance_spot(&Point::new(pos.x, pos.y), range, &dance, &map, &dance_coord, &mut rng);
+                                if let Some(start_pos) = start_pos {
+                                    new_state = MonsterAIState::MOVING {
+                                        goal: MovementGoal::GoDance {
+                                            dance: dance,
+                                            destination: start_pos
+                                        },
+                                        path: None
+                                    };
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -168,6 +189,9 @@ impl<'a> System<'a> for MonsterAISystem {
                                         None
                                     }
                                 }
+                                MovementGoal::GoDance { destination, .. } => {
+                                    path_to(&map, Point::new(pos.x, pos.y), destination)
+                                }
                             };
                         if let Some(path) = path {
                             let first_pos = path[0].clone();
@@ -207,6 +231,11 @@ impl<'a> System<'a> for MonsterAISystem {
                         MovementGoal::SeekEnemy => {
                             new_state = MonsterAIState::WAITING;
                             ai.last_saw_enemy = None;
+                        }
+                        MovementGoal::GoDance { dance, .. } => {
+                            new_state = MonsterAIState::DANCING {
+                                dance: dance
+                            };
                         }
                     }
                 }
@@ -302,4 +331,41 @@ fn path_to(map: &Map, start_pos: Point, dest_pos: Point) -> Option<Vec<Point>> {
     }
 
     None
+}
+
+fn look_for_dance_spot(current_pos: &Point, range: &Vec<Point>, dance: &dancing::Dance, map: &Map, dance_coord: &DanceCoordination, rng: &mut RandomNumberGenerator) -> Option<Point> {
+    if is_good_start_position(current_pos, dance, map, dance_coord) {
+        return Some(*current_pos);
+    }
+    for _ in 0..10 {
+        let i = rng.range(0, range.len());
+        let pos = range[i];
+        if is_good_start_position(&pos, dance, map, dance_coord) {
+            return Some(pos);
+        }
+    }
+    None
+}
+
+fn is_good_start_position(start: &Point, dance: &dancing::Dance, map: &Map, dance_coord: &DanceCoordination) -> bool {
+    let start_idx = map.point_idx(start);
+    let mut at = *start;
+    for dance_event in dance_coord.events.iter() {
+        if dance_event.range.contains(&at) {
+            return false;
+        }
+    }
+    for step in dance.steps().iter() {
+        at = at + step.direction;
+        let at_idx = map.point_idx(&at);
+        if at_idx != start_idx && map.blocked[at_idx] {
+            return false;
+        }
+        for dance_event in dance_coord.events.iter() {
+            if dance_event.range.contains(&at) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
