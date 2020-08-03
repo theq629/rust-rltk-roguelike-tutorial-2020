@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting};
+use crate::{Map, MapPather, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct PathInfo {
@@ -91,7 +91,7 @@ impl<'a> System<'a> for MonsterAISystem {
             // Respond to with presence of enemy
             let enemy_in_sight = viewshed.visible_tiles.contains(&*player_pos);
             if enemy_in_sight {
-                ai.last_saw_enemy_at = Some(Point::new(pos.x, pos.y));
+                ai.last_saw_enemy = Some(Point::new(player_pos.x, player_pos.y));
                 if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => true, _ => false } {
                     // no change
                 } else if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => true, _ => false } {
@@ -150,7 +150,7 @@ impl<'a> System<'a> for MonsterAISystem {
 
             // Go look for enemy if know where they are and aren't busy
             if new_state == MonsterAIState::WAITING && !enemy_in_sight {
-                if let Some(_) = ai.last_saw_enemy_at {
+                if let Some(_) = ai.last_saw_enemy {
                     new_state = MonsterAIState::MOVING {
                         goal: MovementGoal::SeekEnemy,
                         path: None
@@ -181,7 +181,7 @@ impl<'a> System<'a> for MonsterAISystem {
                                     plan_flee(&map, Point::new(pos.x, pos.y), &mut rng)
                                 }
                                 MovementGoal::SeekEnemy => {
-                                    if let Some(dest) = ai.last_saw_enemy_at {
+                                    if let Some(dest) = ai.last_saw_enemy {
                                         path_to(&map, Point::new(pos.x, pos.y), dest)
                                     } else {
                                         None
@@ -228,7 +228,7 @@ impl<'a> System<'a> for MonsterAISystem {
                         }
                         MovementGoal::SeekEnemy => {
                             new_state = MonsterAIState::WAITING;
-                            ai.last_saw_enemy_at = None;
+                            ai.last_saw_enemy = None;
                         }
                         MovementGoal::GoDance { dance, .. } => {
                             new_state = MonsterAIState::DANCING {
@@ -283,10 +283,11 @@ impl<'a> System<'a> for MonsterAISystem {
 }
 
 fn move_toward_player(map: &Map, start_pos: Point, player_pos: Point) -> Option<Point> {
+    let pather = MapPather::new(map, player_pos, false);
     let path = rltk::a_star_search(
         map.xy_idx(start_pos.x, start_pos.y) as i32,
         map.xy_idx(player_pos.x, player_pos.y) as i32,
-        &*map
+        &pather
     );
     if path.success && path.steps.len() > 1 {
         Some(Point::new(
@@ -313,10 +314,11 @@ fn plan_flee(map: &Map, start_pos: Point, rng: &mut RandomNumberGenerator) -> Op
 }
 
 fn path_to(map: &Map, start_pos: Point, dest_pos: Point) -> Option<Vec<Point>> {
+    let pather = MapPather::new(map, dest_pos, false);
     let path = rltk::a_star_search(
         map.xy_idx(start_pos.x, start_pos.y) as i32,
         map.xy_idx(dest_pos.x, dest_pos.y) as i32,
-        &*map
+        &pather
     );
     if path.success && path.steps.len() > 1 {
         let out_path = path.steps.iter().map(|step| {

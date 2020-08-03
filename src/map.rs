@@ -42,6 +42,12 @@ pub struct Map {
     pub tile_content: Vec<Vec<Entity>>
 }
 
+pub struct MapPather<'a> {
+    map: &'a Map,
+    dest: Point,
+    dest_can_block: bool
+}
+
 impl Map {
     pub fn xy_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
@@ -151,13 +157,26 @@ impl Map {
             }
         }
     }
+}
+
+impl<'a> MapPather<'a> {
+    pub fn new(map: &'a Map, dest: Point, dest_can_block: bool) -> Self {
+        MapPather {
+            map: map,
+            dest: dest,
+            dest_can_block: dest_can_block
+        }
+    }
 
     fn is_exit_valid(&self, x: i32, y: i32) -> bool {
-        if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
+        if x < 1 || x > self.map.width - 1 || y < 1 || y > self.map.height - 1 {
             return false;
         }
-        let idx = self.xy_idx(x, y);
-        !self.blocked[idx]
+        if !self.dest_can_block && x == self.dest.x && y == self.dest.y {
+            return true;
+        }
+        let idx = self.map.xy_idx(x, y);
+        !self.map.blocked[idx]
     }
 }
 
@@ -165,12 +184,20 @@ impl BaseMap for Map {
     fn is_opaque(&self, idx: usize) -> bool {
         self.tiles[idx as usize] == TileType::Wall
     }
+}
 
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
+impl<'a> BaseMap for MapPather<'a> {
     fn get_available_exits(&self, idx: usize) -> rltk::SmallVec<[(usize, f32); 10]> {
         let mut exits = rltk::SmallVec::new();
-        let x = idx as i32 % self.width;
-        let y = idx as i32 / self.width;
-        let w = self.width as usize;
+        let x = idx as i32 % self.map.width;
+        let y = idx as i32 / self.map.width;
+        let w = self.map.width as usize;
 
         if self.is_exit_valid(x - 1, y) { exits.push((idx-1, 1.0)) };
         if self.is_exit_valid(x + 1, y) { exits.push((idx+1, 1.0)) };
@@ -186,15 +213,15 @@ impl BaseMap for Map {
     }
 
     fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
-        let w = self.width as usize;
+        let w = self.map.width as usize;
         let p1 = Point::new(idx1 % 2, idx1 / w);
         let p2 = Point::new(idx2 % 2, idx2 / w);
         rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 
-impl Algorithm2D for Map {
+impl<'a> Algorithm2D for MapPather<'a> {
     fn dimensions(&self) -> Point {
-        Point::new(self.width, self.height)
+        Point::new(self.map.width, self.map.height)
     }
 }
