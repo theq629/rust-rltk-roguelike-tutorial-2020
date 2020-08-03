@@ -361,3 +361,45 @@ pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
         Some(_) => GameOverResult::QuitToMenu
     }
 }
+
+pub fn show_full_log(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<()>) {
+    let (screen_width, screen_height) = ctx.get_char_size();
+
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let title_bg = RGB::from_u8(0, 0, 0);
+    let bg = RGB::from_u8(0, 0, 0);
+    let fg = RGB::from_u8(128, 128, 128);
+    let odd_bg = RGB::from_u8(24, 24, 24);
+    let even_bg = RGB::from_u8(16, 16, 16);
+
+    let log = gs.ecs.fetch::<PlayerLog>();
+
+    ctx.fill_region(Rect::with_size(0, 0, screen_width, screen_height), rltk::to_cp437(' '), title_fg, bg);
+    ctx.print_color(0, 0, title_fg, title_bg, "Log");
+    ctx.print_color(0, screen_height - 1, title_fg, title_bg, "Escape to return to game");
+
+    let avail_y = screen_height - 2;
+    let end_i = log.entries.len() as i32;
+    let start_i = i32::max(0, end_i - avail_y as i32);
+
+    let mut y = 1;
+    for i in start_i..end_i {
+        let msg = &log.entries[i as usize];
+        let bg = if i % 2 == 0 { even_bg } else { odd_bg };
+        for x in 0..screen_width {
+            ctx.set_bg(x, y, bg);
+        }
+        ctx.print_color(0, y, fg, bg, msg);
+        y += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => (ItemMenuResult::NoResponse, None)
+            }
+        }
+    }
+}

@@ -2,6 +2,8 @@ use specs::prelude::*;
 use rltk::{Point};
 use crate::{gamelog::{PlayerLog, GameLog, Scope}, Player, Viewshed, Position, InBackpack};
 
+const MAX_LOG_SIZE: u32 = 1000;
+
 pub struct LogUpdaterSystem {}
 
 impl<'a> System<'a> for LogUpdaterSystem {
@@ -51,6 +53,11 @@ impl<'a> System<'a> for LogUpdaterSystem {
                 }
             }
             game_log.entries.clear();
+        }
+
+        let log_size = player_log.entries.len() as u32;
+        if log_size > MAX_LOG_SIZE {
+            player_log.entries.drain(0..((log_size - MAX_LOG_SIZE) as usize));
         }
     }
 }

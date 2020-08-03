@@ -38,6 +38,7 @@ pub enum RunState {
     ShowTargeting { range: i32, item: Entity },
     ShowRemoveItem,
     ShowDanceMenu,
+    ShowLog,
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
     NextLevel,
@@ -169,6 +170,14 @@ impl GameState for state::State {
                         }).expect("Unable to insert intent");
                         newrunstate = RunState::PlayerTurn;
                     }
+                }
+            }
+            RunState::ShowLog => {
+                let result = gui::show_full_log(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => newrunstate = RunState::AwaitingInput
                 }
             }
             RunState::MainMenu{..} => {
