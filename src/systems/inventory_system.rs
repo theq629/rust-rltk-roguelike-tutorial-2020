@@ -158,7 +158,7 @@ impl<'a> System<'a> for ItemUseSystem {
                             add_confusion.push((*mob, confusion.turns));
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
-                            gamelog.on(entity, &format!("{} {} {} on {}, confusing them.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np));
+                            gamelog.on(entity, &format!("{} {} {} on {}, confusing {}.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np, mob_name.pronoun));
                             if let Some(pos) = positions.get(*mob) {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::to_cp437('?'), 200.0);
                             }

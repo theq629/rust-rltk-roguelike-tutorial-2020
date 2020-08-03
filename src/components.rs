@@ -55,6 +55,7 @@ pub struct Name {
     pub name: String,
     pub np: String,
     pub np_pos: String,
+    pub pronoun: String,
     pub pronoun_pos: String,
     pub verb_plural: bool,
 }
@@ -65,6 +66,7 @@ impl Name {
             name: name.to_string(),
             np: format!("the {}", name.to_string()),
             np_pos: format!("the {}'s", name.to_string()),
+            pronoun: "them".to_string(),
             pronoun_pos: "their".to_string(),
             verb_plural: false
         }
