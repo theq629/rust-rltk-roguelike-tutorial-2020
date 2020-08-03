@@ -37,6 +37,32 @@ pub fn cell_info(cell: &Point, ecs: &World) -> Vec<String> {
                     _ => {}
                 }
             }
+            #[cfg(debug_assertions)]
+            if let Some(MonsterAI { state, .. }) = monster_ai.get(entity) {
+                match state {
+                    MonsterAIState::WAITING => {
+                        name = format!("{} [W]", name);
+                    }
+                    MonsterAIState::RESTING => {
+                        name = format!("{} [R]", name);
+                    }
+                    MonsterAIState::AGGRESSIVE => {
+                        name = format!("{} [A]", name);
+                    }
+                    MonsterAIState::DANCING { .. } => {
+                        name = format!("{} [D]", name);
+                    }
+                    MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => {
+                        name = format!("{} [MF]", name);
+                    }
+                    MonsterAIState::MOVING { goal: MovementGoal::SeekEnemy, .. } => {
+                        name = format!("{} [MSe]", name);
+                    }
+                    MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => {
+                        name = format!("{} [MGd]", name);
+                    }
+                }
+            }
             items.push(name);
         }
     }
