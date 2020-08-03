@@ -39,10 +39,14 @@ macro_rules! deserialize_individually {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn save_game(ecs: &mut World) {
-    let mapcopy = ecs.get_mut::<super::map::Map>().unwrap().clone();
+    let map_copy = ecs.get_mut::<super::map::Map>().unwrap().clone();
+    let player_log_copy = ecs.get_mut::<super::gamelog::PlayerLog>().unwrap().clone();
     let savehelper = ecs
         .create_entity()
-        .with(SerializationHelper{ map: mapcopy })
+        .with(SerializationHelper{
+            map: map_copy,
+            player_log: player_log_copy,
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 
@@ -50,6 +54,7 @@ pub fn save_game(ecs: &mut World) {
         let data = (ecs.entities(), ecs.read_storage::<SimpleMarker<SerializeMe>>());
         let writer = File::create(SAVE_FILE_PATH).unwrap();
         let mut serializer = serde_json::Serializer::new(writer);
+
         serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, MonsterAI, Name, BlocksTile, Health, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem, WantsToDropItem, WantsToRemoveItem, Equippable, Equipped, MeleePowerBonus, DefenceBonus, SerializationHelper, ParticleLifetime, Dancing, Poise, EffectRequest, Awestruck, HasArgroedMonsters, WantsToMove, SpreadsLiquid, InFaction, Stamina);
     }
 
@@ -90,9 +95,11 @@ pub fn load_game(ecs: &mut World) {
         let player = ecs.read_storage::<Player>();
         let position = ecs.read_storage::<Position>();
         for (e, h) in (&entities, &helper).join() {
-            let mut worldmap = ecs.write_resource::<super::map::Map>();
-            *worldmap = h.map.clone();
-            worldmap.tile_content = vec![Vec::new(); super::map::MAPCOUNT];
+            let mut map = ecs.write_resource::<super::map::Map>();
+            *map = h.map.clone();
+            map.tile_content = vec![Vec::new(); super::map::MAPCOUNT];
+            let mut player_log = ecs.write_resource::<super::gamelog::PlayerLog>();
+            *player_log = h.player_log.clone();
             deleteme = Some(e);
         }
         for (e, _p, pos) in (&entities, &player, &position).join() {

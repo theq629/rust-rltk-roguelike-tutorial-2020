@@ -1,6 +1,8 @@
 use specs::prelude::{Entity};
+use serde::{Serialize, Deserialize};
 use rltk::{Point};
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PlayerLog {
     pub entries: Vec<String>
 }

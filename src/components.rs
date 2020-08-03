@@ -209,10 +209,11 @@ pub struct SerializeMe;
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct SerializationHelper {
-    pub map: super::map::Map
+    pub map: super::map::Map,
+    pub player_log: super::gamelog::PlayerLog
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct ParticleLifetime {
     pub lifetime_ms: f32
 }
@@ -225,22 +226,23 @@ pub struct MovingAutomatically {
     pub left_clearance: i32
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct CanDoDances {
     pub dances: Vec<Dance>,
     pub descriptors: Vec<String>
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Dancing {
     pub dance: Dance,
+    pub range: HashSet::<Point>,
     pub expect_pos: Point,
     pub steps: Vec<Step>,
     pub step_idx: u32,
     pub repetitions: u32
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Poise {
     pub max_poise: i32,
     pub poise: i32
@@ -261,13 +263,13 @@ pub struct EffectRequest {
     pub effector_np_pos: Option<String>
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Awestruck {
     pub poise: i32,
     pub reason: String
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct WantsToMove {
     pub source: Point,
     pub destination: Point
@@ -276,7 +278,7 @@ pub struct WantsToMove {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct HasArgroedMonsters {}
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct SpreadsLiquid {
     pub liquid: Liquid
 }
