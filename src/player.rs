@@ -160,6 +160,8 @@ fn handle_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 
             VirtualKeyCode::M => return RunState::ShowLog,
 
+            VirtualKeyCode::Slash => return RunState::ShowKeys,
+
             VirtualKeyCode::Escape => return RunState::SaveGame,
 
             _ => { return RunState::AwaitingInput }

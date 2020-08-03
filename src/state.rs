@@ -162,6 +162,7 @@ impl State {
     fn intro_log(&mut self) {
         let mut log = self.ecs.write_resource::<gamelog::GameLog>();
         log.global(&"Welcome to the moon.");
+        log.global(&"Press / for help. Use mouse to look around.");
     }
 
     fn entities_to_remove_on_level_change(&mut self) -> Vec<Entity> {

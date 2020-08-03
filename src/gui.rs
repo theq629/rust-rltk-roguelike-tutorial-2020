@@ -403,3 +403,67 @@ pub fn show_full_log(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<
         }
     }
 }
+
+pub fn show_keys(ctx: &mut Rltk) -> (ItemMenuResult, Option<()>) {
+    let keys = vec![
+        ("escape", "return to main menu"),
+        ("mouse", "look around"),
+        ("mouse", "target ranged item (on use)"),
+        ("arrows", "move"),
+        ("hjklyubn", "move"),
+        ("a + movement", "auto move"),
+        ("space", "skip a turn"),
+        ("g", "get item"),
+        ("i", "see inventory and use item"),
+        ("d", "drop item"),
+        ("r", "unequip item"),
+        ("z", "do dance"),
+        (".", "go down stairs"),
+        ("m", "show message log"),
+        ("/", "show this help"),
+    ];
+    show_pairs(ctx, "Help".to_string(), &keys)
+}
+
+fn show_pairs<S: ToString>(ctx: &mut Rltk, title: String, items: &Vec<(S, S)>) -> (ItemMenuResult, Option<()>) {
+    let items: Vec<(String, String)> = items.iter().map(|(key, value)| {
+        (key.to_string(), value.to_string())
+    }).collect();
+
+    let (screen_width, screen_height) = ctx.get_char_size();
+    let count = items.len();
+
+    let bg = RGB::from_u8(64, 64, 64);
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let key_fg = RGB::from_u8(255, 255, 255);
+    let values_fg = RGB::from_u8(192, 192, 192);
+
+    let space_for_items = if count > 0 { count } else { 1 };
+    let start_x = (screen_width / 4 - 2) as i32;
+    let start_y = ((screen_height / 2) - (space_for_items / 2) as u32) as i32;
+    let width = (2 * screen_width / 4) as i32;
+    let height = (space_for_items + 3) as i32;
+
+    ctx.fill_region(Rect::with_size(start_x, start_y, width, height), rltk::to_cp437(' '), values_fg, bg);
+    ctx.print_color(start_x, start_y, title_fg, bg, title);
+    ctx.print_color(start_x, start_y + height, title_fg, bg, "Escape to return to game".to_string());
+
+    let key_width = items.iter().map(|(k, _)| k.len() as i32).max().unwrap();
+
+    let mut y = start_y + 2;
+    for (key, value) in items.iter() {
+        ctx.print_color(start_x, y, key_fg, bg, key);
+        ctx.print_color(start_x + key_width + 1, y, values_fg, bg, value);
+        y += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => (ItemMenuResult::NoResponse, None)
+            }
+        }
+    }
+}

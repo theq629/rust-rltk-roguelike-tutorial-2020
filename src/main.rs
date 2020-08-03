@@ -38,6 +38,7 @@ pub enum RunState {
     ShowTargeting { range: i32, item: Entity },
     ShowRemoveItem,
     ShowDanceMenu,
+    ShowKeys,
     ShowLog,
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
@@ -174,6 +175,14 @@ impl GameState for state::State {
             }
             RunState::ShowLog => {
                 let result = gui::show_full_log(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => newrunstate = RunState::AwaitingInput
+                }
+            }
+            RunState::ShowKeys => {
+                let result = gui::show_keys(ctx);
                 match result.0 {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {}
