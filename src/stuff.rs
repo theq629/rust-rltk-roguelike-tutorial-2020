@@ -13,6 +13,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             render_order: 0
         })
         .with(Player{})
+        .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(Name{
             name: "player".to_string(),

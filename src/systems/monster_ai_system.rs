@@ -84,8 +84,7 @@ impl<'a> System<'a> for MonsterAISystem {
                     if *goal == MovementGoal::Flee {
                         new_state = MonsterAIState::WAITING;
                     }
-                }
-                if new_state == MonsterAIState::RESTING {
+                } else if new_state == MonsterAIState::RESTING {
                     new_state = MonsterAIState::WAITING;
                 }
             }
@@ -93,7 +92,7 @@ impl<'a> System<'a> for MonsterAISystem {
             // Respond to with presence of enemy
             let enemy_in_sight = viewshed.visible_tiles.contains(&*player_pos);
             if enemy_in_sight {
-                ai.last_saw_enemy = Some(player_pos.clone());
+                ai.last_saw_enemy_at = Some(Point::new(pos.x, pos.y));
                 if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => true, _ => false } {
                     // no change
                 } else if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => true, _ => false } {
@@ -152,7 +151,7 @@ impl<'a> System<'a> for MonsterAISystem {
 
             // Go look for enemy if know where they are and aren't busy
             if new_state == MonsterAIState::WAITING && !enemy_in_sight {
-                if let Some(_) = ai.last_saw_enemy {
+                if let Some(_) = ai.last_saw_enemy_at {
                     new_state = MonsterAIState::MOVING {
                         goal: MovementGoal::SeekEnemy,
                         path: None
@@ -183,7 +182,7 @@ impl<'a> System<'a> for MonsterAISystem {
                                     plan_flee(&map, Point::new(pos.x, pos.y), &mut rng)
                                 }
                                 MovementGoal::SeekEnemy => {
-                                    if let Some(dest) = ai.last_saw_enemy {
+                                    if let Some(dest) = ai.last_saw_enemy_at {
                                         path_to(&map, Point::new(pos.x, pos.y), dest)
                                     } else {
                                         None
@@ -230,7 +229,7 @@ impl<'a> System<'a> for MonsterAISystem {
                         }
                         MovementGoal::SeekEnemy => {
                             new_state = MonsterAIState::WAITING;
-                            ai.last_saw_enemy = None;
+                            ai.last_saw_enemy_at = None;
                         }
                         MovementGoal::GoDance { dance, .. } => {
                             new_state = MonsterAIState::DANCING {

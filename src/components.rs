@@ -37,7 +37,7 @@ pub struct Monster {}
 pub struct MonsterAI {
     pub state: MonsterAIState,
     pub saw_enemy_last_turn: bool,
-    pub last_saw_enemy: Option<Point>
+    pub last_saw_enemy_at: Option<Point>
 }
 
 impl MonsterAI {
@@ -45,7 +45,7 @@ impl MonsterAI {
         MonsterAI {
             state: MonsterAIState::WAITING,
             saw_enemy_last_turn: false,
-            last_saw_enemy: None
+            last_saw_enemy_at: None
         }
     }
 }
