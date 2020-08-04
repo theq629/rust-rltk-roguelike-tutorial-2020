@@ -72,15 +72,15 @@ fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map
         match tile {
             TileType::Floor => {
                 glyph = rltk::to_cp437('.');
-                fg = RGB::from_f32(0.0, 0.5, 0.5);
+                fg = RGB::from_u8(32, 32, 32);
             },
             TileType::Wall => {
                 glyph = wall_glyph(&*map, world_x, world_y);
-                fg = RGB::from_f32(0., 1.0, 0.);
+                fg = RGB::from_u8(128, 128, 128);
             },
             TileType::DownStairs => {
                 glyph = rltk::to_cp437('>');
-                fg = RGB::from_f32(0., 1.0, 1.0);
+                fg = RGB::from_u8(96, 96, 96);
             }
         }
         for liquid in &map.stains[idx] {
