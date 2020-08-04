@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasAggroedMosters};
+use crate::{Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasAggroedMosters};
 
 pub struct ItemUseSystem {}
 
@@ -12,7 +12,6 @@ impl<'a> System<'a> for ItemUseSystem {
                        Entities<'a>,
                        WriteStorage<'a, WantsToUseItem>,
                        ReadStorage<'a, Name>,
-                       ReadStorage<'a, Consumable>,
                        ReadStorage<'a, ProvidesHealing>,
                        ReadStorage<'a, InflictsDamage>,
                        ReadStorage<'a, AreaOfEffect>,
@@ -33,7 +32,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteStorage<'a, HasAggroedMosters>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, causes_confusion, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players, mut has_agroed) = data;
+        let (player_entity, mut map, mut gamelog, player_pos, entities, wants_use, names, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, causes_confusion, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players, mut has_agroed) = data;
 
         for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
@@ -173,16 +172,6 @@ impl<'a> System<'a> for ItemUseSystem {
                     map.stains[*tile_idx].insert(spreads_liquid.liquid);
                 }
             }
-
-            let consumable = consumables.get(useitem.item);
-            match consumable {
-                None => {}
-                Some(_) => {
-                    entities.delete(useitem.item).expect("Delete failed");
-                }
-            }
         }
-
-        wants_use.clear();
     }
 }

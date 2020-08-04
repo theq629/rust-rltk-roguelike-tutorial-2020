@@ -50,6 +50,7 @@ construct_dispatcher!(
         with (ParticleSpawnSystem, "particle_spawn", &[])
         with (LogUpdaterSystem, "log_updater", &[])
         with (NoiseCleanupSystem, "noise_cleanup", &[])
+        with (CleanupItemUseSystem, "item_use_cleanup", &[])
     ]
 );
 
