@@ -85,6 +85,7 @@ fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map
         }
         for liquid in &map.stains[idx] {
             match liquid {
+                Liquid::WATER => { bg = RGB::from_f32(0., 0., 0.3); }
                 Liquid::BLOOD => { bg = RGB::from_f32(0.3, 0., 0.); }
                 Liquid::OIL => { bg = RGB::from_f32(0.3, 0.3, 0.3); }
             }
