@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 use crate::{liquids::Liquid};
 
 pub const MAPWIDTH: usize = 80;
-pub const MAPHEIGHT: usize = 43;
+pub const MAPHEIGHT: usize = 50;
 pub const MAPCOUNT: usize = MAPHEIGHT * MAPWIDTH;
 
 #[derive(PartialEq, Serialize, Deserialize, Copy, Clone)]

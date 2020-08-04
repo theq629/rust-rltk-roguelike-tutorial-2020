@@ -8,6 +8,7 @@ pub enum Stuff {
     Thrall,
     Vampire,
     Rabbit,
+    BigRabbit,
     BloodDart,
     BloodBalloon,
     OilDart,
@@ -30,6 +31,7 @@ impl Stuff {
             Stuff::Thrall => thrall(ecs, x, y),
             Stuff::Vampire => vampire(ecs, x, y),
             Stuff::Rabbit => rabbit(ecs, x, y),
+            Stuff::BigRabbit => big_rabbit(ecs, x, y),
             Stuff::BloodDart => blood_dart(ecs, x, y),
             Stuff::BloodBalloon => blood_balloon(ecs, x, y),
             Stuff::OilDart => oil_dart(ecs, x, y),
@@ -95,7 +97,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
-        .with(CombatStats{ defence: 1, power: 1 })
+        .with(CombatStats{ defence: 5, power: 10 })
         .with(Health{ max_health: 20, health: 20 })
         .with(Stamina{ max_stamina: 100, stamina: 100 })
         .with(Poise{ max_poise: 10, poise: 10 })
@@ -121,7 +123,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(BlocksTile{})
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
-        .with(CombatStats{ defence: 1, power: 1 })
+        .with(CombatStats{ defence: 10, power: 5 })
         .with(Health{ max_health: 50, health: 50 })
         .with(Stamina{ max_stamina: 5, stamina: 5 })
         .with(Poise{ max_poise: 5, poise: 5 })
@@ -148,12 +150,38 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ defence: 1, power: 1 })
-        .with(Health{ max_health: 3, health: 3 })
+        .with(Health{ max_health: 2, health: 2 })
         .with(Stamina{ max_stamina: 30, stamina: 30 })
         .with(Poise{ max_poise: 1, poise: 1 })
         .with(CanDoDances{
             dances: vec![Dance::HOP],
             descriptors: vec!["cute", "nimble", "furry", "hoppy"].iter().map(|s| s.to_string()).collect()
+        })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn big_rabbit(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Name::new_regular("big rabbit"))
+        .with(Renderable{
+            glyph: rltk::to_cp437('R'),
+            fg: RGB::named(rltk::WHITE),
+            render_order: 2
+        })
+        .with(Monster{})
+        .with(MonsterAI::new())
+        .with(BlocksTile{})
+        .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
+        .with(InFaction{ faction: Faction::ENEMIES })
+        .with(CombatStats{ defence: 4, power: 4 })
+        .with(Health{ max_health: 3, health: 3 })
+        .with(Stamina{ max_stamina: 40, stamina: 40 })
+        .with(Poise{ max_poise: 1, poise: 1 })
+        .with(CanDoDances{
+            dances: vec![Dance::HOP],
+            descriptors: vec!["shaggy", "hoppy", "solid", "jumpy", "kicky"].iter().map(|s| s.to_string()).collect()
         })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();

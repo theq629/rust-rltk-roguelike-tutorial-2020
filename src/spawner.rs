@@ -47,9 +47,10 @@ fn spawn_rooms(ecs: &mut World, rooms: Vec<Rect>, spawn_table: Vec<(Stuff, i32, 
 
 fn floor_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
     vec![
-        (Stuff::Rabbit, 20, 50),
-        (Stuff::Thrall, 10, 20),
-        (Stuff::Vampire, 5, 10),
+        (Stuff::Rabbit, 15, 30),
+        (Stuff::BigRabbit, 5, 10),
+        (Stuff::Thrall, 1, 5),
+        (Stuff::Vampire, 1, 5),
         (Stuff::BloodDart, 1, 5),
         (Stuff::BloodBalloon, 1, 5),
         (Stuff::OilDart, 1, 5),
