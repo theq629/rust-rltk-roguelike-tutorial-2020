@@ -366,12 +366,19 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
 pub enum GameOverResult { NoSelection, QuitToMenu }
 
 pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
-    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
-    ctx.print_color_centered(17, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
+    let (screen_width, screen_height) = ctx.get_char_size();
+
+    let title_fg = RGB::from_u8(255, 255, 255);
+    let bg = RGB::from_u8(96, 64, 64);
+
+    let y = (screen_height - 8) / 2 - 1;
+    ctx.fill_region(Rect::with_size(0, y - 1, screen_width, 4), rltk::to_cp437(' '), title_fg, bg);
+    ctx.print_color_centered(y, title_fg, bg, "You lost!");
+    ctx.print_color_centered(y + 2, title_fg, bg, "Press escape to return to the menu.");
 
     match ctx.key {
-        None => GameOverResult::NoSelection,
-        Some(_) => GameOverResult::QuitToMenu
+        Some(VirtualKeyCode::Escape) => GameOverResult::QuitToMenu,
+        _ => GameOverResult::NoSelection
     }
 }
 
