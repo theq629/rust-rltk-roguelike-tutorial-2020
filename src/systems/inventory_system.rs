@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player};
 
 pub struct ItemCollectionSystem {}
 
@@ -41,6 +41,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, AreaOfEffect>,
                        WriteStorage<'a, Health>,
                        WriteStorage<'a, SufferDamage>,
+                       ReadStorage<'a, CausesConfusion>,
                        WriteStorage<'a, Confusion>,
                        ReadStorage<'a, Equippable>,
                        WriteStorage<'a, Equipped>,
@@ -54,7 +55,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, Player>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players) = data;
+        let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, causes_confusion, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players) = data;
 
         for (entity, useitem, name) in (&entities, &wants_use, &names).join() {
             let mut target_tiles: Vec<Point> = Vec::new();
@@ -160,7 +161,7 @@ impl<'a> System<'a> for ItemUseSystem {
 
             let mut add_confusion = Vec::new();
             {
-                let causes_confusion = confused.get(useitem.item);
+                let causes_confusion = causes_confusion.get(useitem.item);
                 match causes_confusion {
                     None => {}
                     Some(confusion) => {

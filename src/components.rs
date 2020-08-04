@@ -183,6 +183,11 @@ pub struct Confusion {
     pub turns: i32
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct CausesConfusion {
+    pub turns: i32
+}
+
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum EquipmentSlot { Melee, Shield }
 
@@ -366,6 +371,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<InflictsDamage>();
     ecs.register::<AreaOfEffect>();
     ecs.register::<Confusion>();
+    ecs.register::<CausesConfusion>();
     ecs.register::<Equippable>();
     ecs.register::<Equipped>();
     ecs.register::<MeleePowerBonus>();

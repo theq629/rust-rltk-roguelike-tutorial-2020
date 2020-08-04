@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, Confusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina, MakesNoise};
+use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, CausesConfusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina, MakesNoise};
 
 #[derive(Clone, PartialEq)]
 pub enum Stuff {
@@ -302,7 +302,7 @@ pub fn firecracker(ecs: &mut World, x: i32, y: i32) {
         .with(Item{})
         .with(Consumable{})
         .with(Ranged{ range: 10 })
-        .with(Confusion{ turns: 4 })
+        .with(CausesConfusion{ turns: 4 })
         .with(MakesNoise{
             volume: 128,
             surprising: true,
@@ -325,7 +325,7 @@ pub fn flashbang(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable{})
         .with(Ranged{ range: 10 })
         .with(AreaOfEffect{ radius: 6 })
-        .with(Confusion{ turns: 8 })
+        .with(CausesConfusion{ turns: 8 })
         .with(MakesNoise{
             volume: 256,
             surprising: true,
@@ -343,11 +343,11 @@ pub fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
             fg: RGB::named(rltk::PINK),
             render_order: 3
         })
-        .with(Name::new_regular("confusion"))
+        .with(Name::new_regular("confusion scroll"))
         .with(Item{})
         .with(Consumable{})
         .with(Ranged{ range: 6 })
-        .with(Confusion{ turns: 4 })
+        .with(CausesConfusion{ turns: 4 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
