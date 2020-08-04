@@ -157,8 +157,8 @@ impl GameState for state::State {
                     gui::ItemMenuResult::Selected => {
                         if player_can_act(&mut self.ecs) {
                             let item_entity = result.1.unwrap();
-                            let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
-                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                            let mut intent = self.ecs.write_storage::<WantsToUnequipItem>();
+                            intent.insert(*self.ecs.fetch::<Entity>(), WantsToUnequipItem{ item: item_entity }).expect("Unable to insert intent");
                         }
                         newrunstate = RunState::PlayerTurn;
                     }

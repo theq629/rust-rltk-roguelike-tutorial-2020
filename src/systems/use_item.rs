@@ -1,29 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasAggroedMosters};
-
-pub struct ItemCollectionSystem {}
-
-impl<'a> System<'a> for ItemCollectionSystem {
-    type SystemData = (WriteExpect<'a, GameLog>,
-                       WriteStorage<'a, WantsToPickupItem>,
-                       WriteStorage<'a, Position>,
-                       ReadStorage<'a, Name>,
-                       WriteStorage<'a, InBackpack>);
-
-    fn run(&mut self, data : Self::SystemData) {
-        let (mut gamelog, mut wants_pickup, mut positions, names, mut backpack) = data;
-
-        for pickup in wants_pickup.join() {
-            positions.remove(pickup.item);
-            backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
-            let picker_name = names.get(pickup.collected_by).unwrap();
-            gamelog.on(pickup.collected_by, &format!("{} {} up {}.", capitalize(&picker_name.np), picker_name.verb("picks", "pick"), names.get(pickup.item).unwrap().np));
-        }
-
-        wants_pickup.clear();
-    }
-}
+use crate::{Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasAggroedMosters};
 
 pub struct ItemUseSystem {}
 
@@ -207,54 +184,5 @@ impl<'a> System<'a> for ItemUseSystem {
         }
 
         wants_use.clear();
-    }
-}
-
-pub struct ItemDropSystem {}
-
-impl<'a> System<'a> for ItemDropSystem {
-    type SystemData = (WriteExpect<'a, GameLog>,
-                       Entities<'a>,
-                       WriteStorage<'a, WantsToDropItem>,
-                       ReadStorage<'a, Name>,
-                       WriteStorage<'a, Position>,
-                       WriteStorage<'a, InBackpack>);
-
-    fn run(&mut self, data : Self::SystemData) {
-        let (mut gamelog, entities, mut wants_drop, names, mut positions, mut backpack) = data;
-
-        for (entity, to_drop, name) in (&entities, &wants_drop, &names).join() {
-            let mut dropper_pos : Position = Position{x: 0, y: 0};
-            {
-                let dropped_pos = positions.get(entity).unwrap();
-                dropper_pos.x = dropped_pos.x;
-                dropper_pos.y = dropped_pos.y;
-            }
-            positions.insert(to_drop.item, Position{x: dropper_pos.x, y: dropper_pos.y}).expect("Unable to insert position");
-            backpack.remove(to_drop.item);
-            gamelog.on(entity, &format!("{} {} {}.", capitalize(&name.np), name.verb("drops", "drop"), names.get(to_drop.item).unwrap().np));
-        }
-
-        wants_drop.clear();
-    }
-}
-
-pub struct ItemRemoveSystem {}
-
-impl<'a> System<'a> for ItemRemoveSystem {
-    type SystemData = (
-            Entities<'a>,
-            WriteStorage<'a, WantsToRemoveItem>,
-            WriteStorage<'a, Equipped>,
-            WriteStorage<'a, InBackpack>
-        );
-
-    fn run(&mut self, data: Self::SystemData) {
-        let (entities, mut wants_remove, mut equipped, mut backpack) = data;
-        for (entity, to_remove) in (&entities, &wants_remove).join() {
-            equipped.remove(to_remove.item);
-            backpack.insert(to_remove.item, InBackpack{ owner: entity }).expect("Unable to insert in backpack");
-        }
-        wants_remove.clear();
     }
 }

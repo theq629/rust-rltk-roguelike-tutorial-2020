@@ -166,7 +166,7 @@ pub struct WantsToDropItem {
 }
 
 #[derive(Component, ConvertSaveload, Clone)]
-pub struct WantsToRemoveItem {
+pub struct WantsToUnequipItem {
     pub item: Entity
 }
 
@@ -372,7 +372,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<WantsToPickupItem>();
     ecs.register::<WantsToUseItem>();
     ecs.register::<WantsToDropItem>();
-    ecs.register::<WantsToRemoveItem>();
+    ecs.register::<WantsToUnequipItem>();
     ecs.register::<Consumable>();
     ecs.register::<Ranged>();
     ecs.register::<InflictsDamage>();
