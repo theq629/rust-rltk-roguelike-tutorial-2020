@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{CombatStats, Health, WantsToMelee, Name, SufferDamage, gamelog::GameLog, text::capitalize, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasArgroedMonsters, Stamina, MakeNoise};
+use crate::{CombatStats, Health, WantsToMelee, Name, SufferDamage, gamelog::GameLog, text::capitalize, MeleePowerBonus, DefenceBonus, Equipped, Position, systems::particle_system::ParticleBuilder, HasAggroedMosters, Stamina, MakeNoise};
 
 pub struct MeleeCombatSystem {}
 
@@ -18,14 +18,14 @@ impl<'a> System<'a> for MeleeCombatSystem {
                        ReadStorage<'a, Equipped>,
                        ReadStorage<'a, Position>,
                        WriteExpect<'a, ParticleBuilder>,
-                       WriteStorage<'a, HasArgroedMonsters>,
+                       WriteStorage<'a, HasAggroedMosters>,
                        WriteStorage<'a, MakeNoise>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (entities, mut gamelog, mut wants_melee, names, combat_stats, health, mut stamina, mut inflict_damage, melee_power_bonuses, defence_bonuses, equipped, positions, mut particle_builder, mut has_agroed, mut make_noises) = data;
 
         for (entity, wants_melee, health, mut stamina, name, stats) in (&entities, &wants_melee, &health, &mut stamina, &names, &combat_stats).join() {
-            has_agroed.insert(entity, HasArgroedMonsters {}).expect("Failed to insert agro.");
+            has_agroed.insert(entity, HasAggroedMosters {}).expect("Failed to insert agro.");
 
             if health.health > 0 && stamina.stamina > 0 {
                 let mut offensive_bonus = 0;

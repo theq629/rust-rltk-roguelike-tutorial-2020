@@ -293,7 +293,7 @@ pub struct WantsToMove {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
-pub struct HasArgroedMonsters {}
+pub struct HasAggroedMosters {}
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct SpreadsLiquid {
@@ -392,7 +392,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Poise>();
     ecs.register::<EffectRequest>();
     ecs.register::<Awestruck>();
-    ecs.register::<HasArgroedMonsters>();
+    ecs.register::<HasAggroedMosters>();
     ecs.register::<WantsToMove>();
     ecs.register::<SpreadsLiquid>();
     ecs.register::<WantsToDance>();

@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode, Rect};
-use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info, CanDoDances, HasArgroedMonsters};
+use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info, CanDoDances, HasAggroedMosters};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -26,7 +26,7 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     let (screen_width, screen_height) = ctx.get_char_size();
     let entities = ecs.entities();
     let players = ecs.read_storage::<Player>();
-    let has_agroed = ecs.read_storage::<HasArgroedMonsters>();
+    let has_agroed = ecs.read_storage::<HasAggroedMosters>();
 
     let bg = RGB::from_u8(64, 64, 64);
     let values_fg = RGB::from_u8(192, 192, 192);

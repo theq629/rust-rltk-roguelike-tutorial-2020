@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasArgroedMonsters};
+use crate::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, text::capitalize, WantsToUseItem, ProvidesHealing, Health, WantsToDropItem, Consumable, InflictsDamage, SufferDamage, Map, AreaOfEffect, CausesConfusion, Confusion, Equippable, Equipped, WantsToRemoveItem, systems::particle_system::ParticleBuilder, SpreadsLiquid, MakeNoise, MakesNoise, Monster, Player, HasAggroedMosters};
 
 pub struct ItemCollectionSystem {}
 
@@ -53,7 +53,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteStorage<'a, MakesNoise>,
                        ReadStorage<'a, Monster>,
                        ReadStorage<'a, Player>,
-                       WriteStorage<'a, HasArgroedMonsters>);
+                       WriteStorage<'a, HasAggroedMosters>);
 
     fn run(&mut self, data: Self::SystemData) {
         let (player_entity, mut map, mut gamelog, player_pos, entities, mut wants_use, names, consumables, healing_providers, inflict_damage, aoe, mut health, mut suffer_damage, causes_confusion, mut confused, equippable, mut equipped, mut backpack, positions, mut particle_builder, liquid_spreaders, mut make_noises, makes_noises, monsters, players, mut has_agroed) = data;
@@ -153,7 +153,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         let mob_name = names.get(*mob).unwrap();
                         let item_name = names.get(useitem.item).unwrap();
                         gamelog.on(entity, &format!("{} {} {} on {}, inflicting {} hp.", capitalize(&name.np), name.verb("uses", "use"), item_name.np, mob_name.np, damage.damage));
-                        has_agroed.insert(entity, HasArgroedMonsters {}).expect("Failed to insert agro.");
+                        has_agroed.insert(entity, HasAggroedMosters {}).expect("Failed to insert agro.");
                         if let Some(pos) = positions.get(*mob) {
                             particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::to_cp437('‼'), 200.0);
                         }

@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, MapPather, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting, Noise, systems::noise::can_hear, MonsterAINoiseRecord, Turn, InFaction};
+use crate::{Map, MapPather, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasAggroedMosters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting, Noise, systems::noise::can_hear, MonsterAINoiseRecord, Turn, InFaction};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct PathInfo {
@@ -46,7 +46,7 @@ impl<'a> System<'a> for MonsterAISystem {
                        ReadStorage<'a, Dancing>,
                        WriteExpect<'a, RandomNumberGenerator>,
                        ReadStorage<'a, CanDoDances>,
-                       ReadStorage<'a, HasArgroedMonsters>,
+                       ReadStorage<'a, HasAggroedMosters>,
                        WriteStorage<'a, WantsToMove>,
                        WriteStorage<'a, WantsToDance>,
                        ReadStorage<'a, Health>,
