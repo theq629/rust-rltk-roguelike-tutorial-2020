@@ -1,7 +1,8 @@
 use std::cmp::{min, max};
+use std::collections::{HashSet};
 use specs::prelude::*;
 use rltk::prelude::*;
-use super::{Position, Renderable, liquids::Liquid};
+use super::{Position, Renderable, liquids::Liquid, Dancing};
 use super::map::{Map, TileType};
 
 pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
@@ -15,11 +16,17 @@ pub fn draw_world(ecs: &World, ctx: &mut Rltk) {
     let world_min_y = max(0, view_centre.y - (screen_height / 2) as i32);
     let world_max_y = min(map.height, world_min_y + screen_height as i32);
 
+    let dances = ecs.read_storage::<Dancing>();
+    let mut dance_tiles: HashSet<Point> = HashSet::new();
+    for (dancing,) in (&dances,).join() {
+        dance_tiles.extend(&dancing.range);
+    }
+
     let mut screen_x = 0;
     for world_x in world_min_x..world_max_x {
         let mut screen_y = 0;
         for world_y in world_min_y..world_max_y {
-            draw_cell(world_x, world_y, screen_x, screen_y, &map, ctx);
+            draw_cell(world_x, world_y, screen_x, screen_y, &dance_tiles, &map, ctx);
             screen_y += 1;
         }
         screen_x += 1;
@@ -62,7 +69,7 @@ pub fn screen_to_world_point(point: Point, ecs: &World, ctx: &mut Rltk) -> Point
     Point::new(point.x + world_min_x, point.y + world_min_y)
 }
 
-fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map, ctx: &mut Rltk) {
+fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, dance_tiles: &HashSet<Point>, map: &Map, ctx: &mut Rltk) {
     let idx = map.xy_idx(world_x, world_y);
     let glyph;
     let mut fg;
@@ -72,7 +79,11 @@ fn draw_cell(world_x: i32, world_y: i32, screen_x: i32, screen_y: i32, map: &Map
         match tile {
             TileType::Floor => {
                 glyph = rltk::to_cp437('.');
-                fg = RGB::from_u8(32, 32, 32);
+                if map.visible_tiles[idx] && dance_tiles.contains(&Point::new(world_x, world_y)) {
+                    fg = RGB::from_u8(128, 128, 64);
+                } else {
+                    fg = RGB::from_u8(32, 32, 32);
+                }
             },
             TileType::Wall => {
                 glyph = wall_glyph(&*map, world_x, world_y);
