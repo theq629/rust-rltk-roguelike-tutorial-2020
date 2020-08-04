@@ -33,11 +33,20 @@ pub struct Viewshed {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct MonsterAINoiseRecord {
+    pub turn: Turn,
+    pub volume: u32,
+    pub surprising: bool,
+    pub location: Point
+}
+
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct MonsterAI {
     pub state: MonsterAIState,
     pub saw_enemy_last_turn: bool,
-    pub last_saw_enemy: Option<Point>
+    pub last_saw_enemy: Option<Point>,
+    pub last_heard_noise: Option<MonsterAINoiseRecord>
 }
 
 impl MonsterAI {
@@ -45,7 +54,8 @@ impl MonsterAI {
         MonsterAI {
             state: MonsterAIState::WAITING,
             saw_enemy_last_turn: false,
-            last_saw_enemy: None
+            last_saw_enemy: None,
+            last_heard_noise: None
         }
     }
 }
@@ -329,14 +339,11 @@ pub struct MakeNoise {
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Noise {
-    pub turn: Turn,
     pub location: Point,
-    pub lasts: u32,
     pub volume: u32,
     pub faction: Option<Faction>,
     pub surprising: bool,
-    pub description: String,
-    pub player_processed: bool
+    pub description: String
 }
 
 #[derive(Component, ConvertSaveload, Clone)]

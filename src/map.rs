@@ -48,6 +48,10 @@ pub struct MapPather<'a> {
     dest_can_block: bool
 }
 
+pub struct WallOnlyMapPather<'a> {
+    map: &'a Map
+}
+
 impl Map {
     pub fn xy_idx(&self, x: i32, y: i32) -> usize {
         (y as usize * self.width as usize) + x as usize
@@ -159,6 +163,18 @@ impl Map {
     }
 }
 
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx as usize] == TileType::Wall
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
 impl<'a> MapPather<'a> {
     pub fn new(map: &'a Map, dest: Point, dest_can_block: bool) -> Self {
         MapPather {
@@ -177,18 +193,6 @@ impl<'a> MapPather<'a> {
         }
         let idx = self.map.xy_idx(x, y);
         !self.map.blocked[idx]
-    }
-}
-
-impl BaseMap for Map {
-    fn is_opaque(&self, idx: usize) -> bool {
-        self.tiles[idx as usize] == TileType::Wall
-    }
-}
-
-impl Algorithm2D for Map {
-    fn dimensions(&self) -> Point {
-        Point::new(self.width, self.height)
     }
 }
 
@@ -221,6 +225,56 @@ impl<'a> BaseMap for MapPather<'a> {
 }
 
 impl<'a> Algorithm2D for MapPather<'a> {
+    fn dimensions(&self) -> Point {
+        Point::new(self.map.width, self.map.height)
+    }
+}
+
+impl<'a> WallOnlyMapPather<'a> {
+    pub fn new(map: &'a Map) -> Self {
+        WallOnlyMapPather {
+            map: map
+        }
+    }
+
+    fn is_exit_valid(&self, x: i32, y: i32) -> bool {
+        if x < 1 || x > self.map.width - 1 || y < 1 || y > self.map.height - 1 {
+            return false;
+        }
+        let idx = self.map.xy_idx(x, y);
+        self.map.tiles[idx] != TileType::Wall
+    }
+}
+
+impl<'a> BaseMap for WallOnlyMapPather<'a> {
+    fn get_available_exits(&self, idx: usize) -> rltk::SmallVec<[(usize, f32); 10]> {
+        let mut exits = rltk::SmallVec::new();
+        let x = idx as i32 % self.map.width;
+        let y = idx as i32 / self.map.width;
+        let w = self.map.width as usize;
+
+        if self.is_exit_valid(x - 1, y) { exits.push((idx-1, 1.0)) };
+        if self.is_exit_valid(x + 1, y) { exits.push((idx+1, 1.0)) };
+        if self.is_exit_valid(x, y - 1) { exits.push((idx-w, 1.0)) };
+        if self.is_exit_valid(x, y + 1) { exits.push((idx+w, 1.0)) };
+
+        if self.is_exit_valid(x - 1, y - 1) { exits.push(((idx-w)-1, 1.45)) };
+        if self.is_exit_valid(x + 1, y - 1) { exits.push(((idx-w)+1, 1.45)) };
+        if self.is_exit_valid(x - 1, y + 1) { exits.push(((idx+w)-1, 1.45)) };
+        if self.is_exit_valid(x + 1, y + 1) { exits.push(((idx+w)+1, 1.45)) };
+
+        exits
+    }
+
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+        let w = self.map.width as usize;
+        let p1 = Point::new(idx1 % 2, idx1 / w);
+        let p2 = Point::new(idx2 % 2, idx2 / w);
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
+    }
+}
+
+impl<'a> Algorithm2D for WallOnlyMapPather<'a> {
     fn dimensions(&self) -> Point {
         Point::new(self.map.width, self.map.height)
     }

@@ -69,6 +69,9 @@ pub fn cell_info(cell: &Point, ecs: &World) -> Vec<String> {
                     MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => {
                         name = format!("{} [MGd]", name);
                     }
+                    MonsterAIState::MOVING { goal: MovementGoal::InvestigateNoise { .. }, .. } => {
+                        name = format!("{} [MIn]", name);
+                    }
                 }
             }
             items.push(name);

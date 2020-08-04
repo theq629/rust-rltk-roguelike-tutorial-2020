@@ -97,7 +97,7 @@ pub fn vampire(ecs: &mut World, x: i32, y: i32) {
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ defence: 1, power: 1 })
         .with(Health{ max_health: 20, health: 20 })
-        .with(Stamina{ max_stamina: 10, stamina: 10 })
+        .with(Stamina{ max_stamina: 100, stamina: 100 })
         .with(Poise{ max_poise: 10, poise: 10 })
         .with(CanDoDances{
             dances: vec![Dance::CIRCLE],
@@ -122,7 +122,7 @@ pub fn thrall(ecs: &mut World, x: i32, y: i32) {
         .with(Viewshed{ visible_tiles: Vec::new(), range: 8, dirty: true })
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ defence: 1, power: 1 })
-        .with(Health{ max_health: 10, health: 10 })
+        .with(Health{ max_health: 50, health: 50 })
         .with(Stamina{ max_stamina: 5, stamina: 5 })
         .with(Poise{ max_poise: 5, poise: 5 })
         .with(CanDoDances{
@@ -149,7 +149,7 @@ pub fn rabbit(ecs: &mut World, x: i32, y: i32) {
         .with(InFaction{ faction: Faction::ENEMIES })
         .with(CombatStats{ defence: 1, power: 1 })
         .with(Health{ max_health: 3, health: 3 })
-        .with(Stamina{ max_stamina: 5, stamina: 5 })
+        .with(Stamina{ max_stamina: 30, stamina: 30 })
         .with(Poise{ max_poise: 1, poise: 1 })
         .with(CanDoDances{
             dances: vec![Dance::HOP],
@@ -259,7 +259,7 @@ pub fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
         .with(MakesNoise{
-            volume: 64,
+            volume: 15,
             surprising: true,
             description: "magic".to_string()
         })
@@ -281,7 +281,7 @@ pub fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Ranged{ range: 6 })
         .with(InflictsDamage{ damage: 8 })
         .with(MakesNoise{
-            volume: 128,
+            volume: 20,
             surprising: true,
             description: "fire".to_string()
         })
@@ -301,10 +301,10 @@ pub fn firecracker(ecs: &mut World, x: i32, y: i32) {
         .with(Name::new_regular("firecracker"))
         .with(Item{})
         .with(Consumable{})
-        .with(Ranged{ range: 10 })
+        .with(Ranged{ range: 15 })
         .with(CausesConfusion{ turns: 4 })
         .with(MakesNoise{
-            volume: 128,
+            volume: 20,
             surprising: true,
             description: "a bang".to_string()
         })
@@ -323,11 +323,11 @@ pub fn flashbang(ecs: &mut World, x: i32, y: i32) {
         .with(Name::new_regular("flashbang"))
         .with(Item{})
         .with(Consumable{})
-        .with(Ranged{ range: 10 })
+        .with(Ranged{ range: 30 })
         .with(AreaOfEffect{ radius: 6 })
         .with(CausesConfusion{ turns: 8 })
         .with(MakesNoise{
-            volume: 256,
+            volume: 30,
             surprising: true,
             description: "a loud bang".to_string()
         })

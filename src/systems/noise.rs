@@ -1,12 +1,12 @@
 use specs::prelude::*;
-use crate::{MakeNoise, Noise, Turn, gamelog::PlayerLog};
+use rltk::{Point};
+use crate::{MakeNoise, Noise, gamelog::PlayerLog};
 
 pub struct NoiseSystem {}
 
 impl<'a> System<'a> for NoiseSystem {
     type SystemData = (
         Entities<'a>,
-        ReadExpect<'a, Turn>,
         WriteStorage<'a, MakeNoise>,
         WriteStorage<'a, Noise>
     );
@@ -14,36 +14,22 @@ impl<'a> System<'a> for NoiseSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             entities,
-            turn,
             mut make_noises,
             mut noises
         ) = data;
 
-        let mut to_delete = Vec::new();
-        for (entity, noise) in (&entities, &noises).join() {
-            if noise.turn + noise.lasts <= *turn {
-                to_delete.push(entity);
-            }
-        }
-
         for make_noise in make_noises.join() {
             let noise_entity = entities.create();
             noises.insert(noise_entity, Noise {
-                turn: *turn,
                 location: make_noise.location.clone(),
                 volume: make_noise.volume,
-                lasts: u32::min(make_noise.volume, 6),
                 faction: make_noise.faction,
                 surprising: make_noise.surprising,
-                description: make_noise.description.to_string(),
-                player_processed: false
+                description: make_noise.description.to_string()
             }).expect("Failed to insert noise.");
         }
-        make_noises.clear();
 
-        for entity in to_delete {
-            entities.delete(entity).expect("Failed to delete noise.");
-        }
+        make_noises.clear();
     }
 }
 
@@ -58,16 +44,35 @@ impl<'a> System<'a> for PlayerListeningSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             mut player_log,
-            mut noises
+            noises
         ) = data;
 
-        for (mut noise,) in (&mut noises,).join() {
-            if !noise.player_processed {
-                if noise.surprising {
-                    player_log.insert(&format!("You hear {}.", noise.description));
-                }
-                noise.player_processed = true;
+        for (noise,) in (&noises,).join() {
+            if noise.surprising && can_hear(&noise.location, noise) {
+                player_log.insert(&format!("You hear {}.", noise.description));
             }
         }
     }
+}
+
+pub struct NoiseCleanupSystem {}
+
+impl<'a> System<'a> for NoiseCleanupSystem {
+    type SystemData = (
+        WriteStorage<'a, Noise>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (
+            mut noises,
+        ) = data;
+
+        noises.clear();
+    }
+}
+
+pub fn can_hear(pos: &Point, noise: &Noise) -> bool {
+    let (dx, dy) = (pos.x - noise.location.x, pos.y - noise.location.y);
+    let d = dx * dx + dy * dy;
+    d < (noise.volume * noise.volume) as i32
 }

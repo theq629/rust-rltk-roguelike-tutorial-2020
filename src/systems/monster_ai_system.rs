@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point, RandomNumberGenerator};
-use crate::{Map, MapPather, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting};
+use crate::{Map, MapPather, Viewshed, Position, Monster, MonsterAI, WantsToMelee, Confusion, systems::particle_system::ParticleBuilder, RunState, Dancing, CanDoDances, HasArgroedMonsters, WantsToMove, WantsToDance, Health, Stamina, Poise, dancing, gamelog::GameLog, text::{capitalize}, Name, Resting, Noise, systems::noise::can_hear, MonsterAINoiseRecord, Turn, InFaction};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct PathInfo {
@@ -14,7 +14,8 @@ pub struct PathInfo {
 pub enum MovementGoal {
     Flee,
     SeekEnemy,
-    GoDance { dance: dancing::Dance, destination: Point }
+    GoDance { dance: dancing::Dance, destination: Point },
+    InvestigateNoise { destination: Point, surprising: bool }
 }
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
@@ -82,15 +83,36 @@ impl<'a> System<'a> for MonsterAISystem {
                 }
             }
 
+            // Prioritize fleeing if that's in progress
+            let mut chose_action = false;
+            if match new_state { MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => true, _ => false } {
+                chose_action = true;
+            }
+
+            // Respond to surprising noise
+            if new_state != MonsterAIState::AGGRESSIVE && match ai.state { MonsterAIState::MOVING { goal: MovementGoal::InvestigateNoise { surprising: true, .. }, .. } => false, _ => true } {
+                if let Some(nr) = &ai.last_heard_noise {
+                    if nr.surprising {
+                        chose_action = true;
+                        new_state = MonsterAIState::MOVING {
+                            goal: MovementGoal::InvestigateNoise {
+                                destination: nr.location.clone(),
+                                surprising: true
+                            },
+                            path: None
+                        };
+                    }
+                }
+            }
+
             // Respond to with presence of enemy
             let enemy_in_sight = viewshed.visible_tiles.contains(&*player_pos);
-            if enemy_in_sight {
+            if !chose_action && enemy_in_sight {
                 ai.last_saw_enemy = Some(Point::new(player_pos.x, player_pos.y));
-                if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::Flee, .. } => true, _ => false } {
-                    // no change
-                } else if match ai.state { MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => true, _ => false } {
+                if match new_state { MonsterAIState::MOVING { goal: MovementGoal::GoDance { .. }, .. } => true, _ => false } {
                     // no change
                 } else if health.health < health.max_health / 10 {
+                    chose_action = true;
                     particle_builder.request(pos.x, pos.y, Health::colour(), rltk::to_cp437('‼'), 200.0);
                     gamelog.on(entity, &format!("{} {} for {} life.", capitalize(&name.np), name.verb("flees", "flee"), name.pronoun_pos));
                     new_state = MonsterAIState::MOVING {
@@ -98,6 +120,7 @@ impl<'a> System<'a> for MonsterAISystem {
                         path: None
                     };
                 } else if stamina.stamina == 0 {
+                    chose_action = true;
                     particle_builder.request(pos.x, pos.y, Stamina::colour(), rltk::to_cp437('‼'), 200.0);
                     gamelog.on(entity, &format!("{} {} to rest.", capitalize(&name.np), name.verb("flees", "flee")));
                     new_state = MonsterAIState::MOVING {
@@ -105,6 +128,7 @@ impl<'a> System<'a> for MonsterAISystem {
                         path: None
                     };
                 } else if poise.poise == 0 {
+                    chose_action = true;
                     particle_builder.request(pos.x, pos.y, Poise::colour(), rltk::to_cp437('‼'), 200.0);
                     gamelog.on(entity, &format!("{} {} in shame.", capitalize(&name.np), name.verb("flees", "flee")));
                     new_state = MonsterAIState::MOVING {
@@ -113,6 +137,7 @@ impl<'a> System<'a> for MonsterAISystem {
                     };
                 } else {
                     if match has_agroed.get(*player_entity) { None => false, _ => true } {
+                    chose_action = true;
                         new_state = MonsterAIState::AGGRESSIVE;
                     } else {
                         if let Some(can) = can_do_dances.get(entity) {
@@ -127,6 +152,7 @@ impl<'a> System<'a> for MonsterAISystem {
                                 let dance = can.dances[i].clone();
                                 let start_pos = look_for_dance_spot(&Point::new(pos.x, pos.y), range, &dance, &map, &dancers, &mut rng);
                                 if let Some(start_pos) = start_pos {
+                                    chose_action = true;
                                     new_state = MonsterAIState::MOVING {
                                         goal: MovementGoal::GoDance {
                                             dance: dance,
@@ -142,11 +168,19 @@ impl<'a> System<'a> for MonsterAISystem {
                 }
             }
 
-            // Go look for enemy if know where they are and aren't busy
-            if new_state == MonsterAIState::WAITING && !enemy_in_sight {
+            // If not busy, see if we can look for the enemy or investigate noises
+            if !chose_action && new_state == MonsterAIState::WAITING && !enemy_in_sight {
                 if let Some(_) = ai.last_saw_enemy {
                     new_state = MonsterAIState::MOVING {
                         goal: MovementGoal::SeekEnemy,
+                        path: None
+                    };
+                } else if let Some(nr) = &ai.last_heard_noise {
+                    new_state = MonsterAIState::MOVING {
+                        goal: MovementGoal::InvestigateNoise {
+                            destination: nr.location.clone(),
+                            surprising: true
+                        },
                         path: None
                     };
                 }
@@ -182,6 +216,9 @@ impl<'a> System<'a> for MonsterAISystem {
                                     }
                                 }
                                 MovementGoal::GoDance { destination, .. } => {
+                                    path_to(&map, Point::new(pos.x, pos.y), destination)
+                                }
+                                MovementGoal::InvestigateNoise { destination, .. } => {
                                     path_to(&map, Point::new(pos.x, pos.y), destination)
                                 }
                             };
@@ -228,6 +265,9 @@ impl<'a> System<'a> for MonsterAISystem {
                             new_state = MonsterAIState::DANCING {
                                 dance: dance
                             };
+                        }
+                        MovementGoal::InvestigateNoise { .. } => {
+                            new_state = MonsterAIState::WAITING
                         }
                     }
                 }
@@ -362,4 +402,32 @@ fn is_good_start_position<'a>(start: &Point, dance: &dancing::Dance, map: &Map, 
         }
     }
     return true;
+}
+
+pub struct MonsterAINoiseTrackSystem {}
+
+impl<'a> System<'a> for MonsterAINoiseTrackSystem {
+    type SystemData = (ReadExpect<'a, Turn>,
+                       ReadStorage<'a, Monster>,
+                       WriteStorage<'a, MonsterAI>,
+                       ReadStorage<'a, Noise>,
+                       ReadStorage<'a, InFaction>,
+                       ReadStorage<'a, Position>);
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (turn, monsters, mut monster_ais, noises, factions, positions) = data;
+
+        for (_monster, ai, faction, pos) in (&monsters, &mut monster_ais, &factions, &positions).join() {
+            for (noise,) in (&noises,).join() {
+                if (noise.surprising || match &ai.last_heard_noise { Some(nr) => if nr.surprising { *turn >= nr.turn + 10  } else { true }, _ => true }) && match noise.faction { Some(f) => f == faction.faction, _ => true} && can_hear(&Point::new(pos.x, pos.y), &noise) {
+                    ai.last_heard_noise = Some(MonsterAINoiseRecord {
+                        turn: *turn,
+                        volume: noise.volume,
+                        surprising: noise.surprising,
+                        location: noise.location.clone()
+                    });
+                }
+            }
+        }
+    }
 }

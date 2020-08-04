@@ -45,9 +45,11 @@ construct_dispatcher!(
         barrier
         with (DancingStatusSystem, "dancing_status", &[])
         with (PlayerListeningSystem, "player_listening", &[])
+        with (MonsterAINoiseTrackSystem, "monster_ai_noise_track", &[])
         barrier
         with (ParticleSpawnSystem, "particle_spawn", &[])
         with (LogUpdaterSystem, "log_updater", &[])
+        with (NoiseCleanupSystem, "noise_cleanup", &[])
     ]
 );
 

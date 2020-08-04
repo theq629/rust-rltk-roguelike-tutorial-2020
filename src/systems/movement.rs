@@ -73,7 +73,7 @@ impl<'a> System<'a> for MovementSystem {
             if did_slip {
                 make_noises.insert(entity, MakeNoise {
                     location: Point::new(pos.x, pos.y),
-                    volume: 32,
+                    volume: 15,
                     faction: Some(Faction::PLAYER),
                     surprising: false,
                     description: "something slipping".to_string()
@@ -82,7 +82,7 @@ impl<'a> System<'a> for MovementSystem {
                 if entity == *player { // don't need to bother with regular movement noises for monsters
                     make_noises.insert(entity, MakeNoise {
                         location: Point::new(pos.x, pos.y),
-                        volume: 16,
+                        volume: 10,
                         faction: Some(Faction::PLAYER),
                         surprising: false,
                         description: "movement".to_string()
