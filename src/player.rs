@@ -1,7 +1,7 @@
 use rltk::{Rltk, VirtualKeyCode, Point};
 use specs::prelude::*;
 use std::cmp::{max, min};
-use super::{state::State, Position, Player, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, systems::auto_movement_system, WantsToMove, Resting, Confusion}; 
+use super::{state::State, Position, Player, Map, RunState, Health, WantsToMelee, WantsToPickupItem, Item, gamelog::PlayerLog, TileType, systems::auto_movement_system, WantsToMove, Resting, Confusion, Equipped, EquipmentSlot}; 
 
 pub struct KeyState {
     pub requested_auto_move: bool
@@ -54,6 +54,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let positions = ecs.read_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
     let health = ecs.read_storage::<Health>();
+    let equipped = ecs.read_storage::<Equipped>();
     let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
     let mut wants_to_moves = ecs.write_storage::<WantsToMove>();
     let entities = ecs.entities();
@@ -66,7 +67,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
             match target {
                 None => {}
                 Some(_t) => {
-                    wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+                    for (equip,) in (&equipped,).join() {
+                        if equip.owner == player_entity && equip.slot == EquipmentSlot::Melee {
+                            wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+                            break;
+                        }
+                    }
                     return;
                 }
             }
