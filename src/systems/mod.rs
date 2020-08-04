@@ -21,6 +21,8 @@ mod unequip;
 use unequip::ItemUnequipSystem;
 mod use_item;
 pub use use_item::ItemUseSystem;
+mod handle_use_item;
+pub use handle_use_item::HandleItemUseSystem;
 mod cleanup_item_use;
 pub use cleanup_item_use::CleanupItemUseSystem;
 pub mod particle_system;

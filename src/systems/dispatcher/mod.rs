@@ -36,6 +36,7 @@ construct_dispatcher!(
         with (ItemDropSystem, "item_drop", &[])
         with (ItemUnequipSystem, "item_unequip", &[])
         with (ItemUseSystem, "item_use", &[])
+        with (HandleItemUseSystem, "handle_item_use", &["item_use"])
         with (VisibilitySystem, "visibility", &[])
         with (StartDancingSystem, "start_dancing", &[])
         with (RecoverySystem, "recovery", &[])

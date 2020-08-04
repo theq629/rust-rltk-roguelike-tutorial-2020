@@ -353,6 +353,14 @@ pub struct MakesNoise {
     pub description: String
 }
 
+#[derive(Component)]
+pub struct ItemUseInProgress {
+    pub item: Entity,
+    pub targets_centre: Point,
+    pub target_tiles: Vec<Point>,
+    pub targets: Vec<Entity>
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -402,5 +410,6 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<MakeNoise>();
     ecs.register::<Noise>();
     ecs.register::<MakesNoise>();
+    ecs.register::<ItemUseInProgress>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }
