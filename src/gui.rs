@@ -1,5 +1,5 @@
 use rltk::{RGB, Rltk, Point, VirtualKeyCode, Rect};
-use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info, CanDoDances};
+use super::{Health, Player, gamelog::PlayerLog, Map, Name, state::State, InBackpack, Viewshed, RunState, Equipped, Poise, drawing, dancing, text::capitalize, Stamina, cellinfo::cell_info, CanDoDances, HasArgroedMonsters};
 use specs::prelude::*;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -24,7 +24,9 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
 
 fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     let (screen_width, screen_height) = ctx.get_char_size();
+    let entities = ecs.entities();
     let players = ecs.read_storage::<Player>();
+    let has_agroed = ecs.read_storage::<HasArgroedMonsters>();
 
     let bg = RGB::from_u8(64, 64, 64);
     let values_fg = RGB::from_u8(192, 192, 192);
@@ -35,17 +37,19 @@ fn draw_stats(ecs: &World, ctx: &mut Rltk) {
     }
 
     let mut x = 1;
-    let health = ecs.read_storage::<Health>();
-    for (_player, health) in (&players, &health).join() {
-        x = 1 + draw_stat(capitalize(&Health::NAME), health.health, health.max_health, x, y, Health::colour(), values_fg, bg, ctx);
-    }
     let stamina = ecs.read_storage::<Stamina>();
     for (_player, stamina) in (&players, &stamina).join() {
         x = 1 + draw_stat(capitalize(&Stamina::NAME), stamina.stamina, stamina.max_stamina, x, y, Stamina::colour(), values_fg, bg, ctx);
     }
     let poise = ecs.read_storage::<Poise>();
     for (_player, poise) in (&players, &poise).join() {
-        x = draw_stat(capitalize(&Poise::NAME), poise.poise, poise.max_poise, x, y, Poise::colour(), values_fg, bg, ctx);
+        x = 1 + draw_stat(capitalize(&Poise::NAME), poise.poise, poise.max_poise, x, y, Poise::colour(), values_fg, bg, ctx);
+    }
+    let health = ecs.read_storage::<Health>();
+    for (entity, _player, health) in (&entities, &players, &health).join() {
+        if let Some(_) = has_agroed.get(entity) {
+            x = draw_stat(capitalize(&Health::NAME), health.health, health.max_health, x, y, Health::colour(), values_fg, bg, ctx);
+        }
     }
 }
 
