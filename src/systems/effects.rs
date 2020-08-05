@@ -1,11 +1,14 @@
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use rltk::{Point};
-use crate::{EffectRequest, Position, Awestruck, InFaction, Viewshed};
+use crate::{EffectRequest, Position, Awestruck, InFaction, Viewshed, Poise};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub enum Effect {
-    AWESOMENESS {
+    Awesomeness {
+        poise: i32
+    },
+    SelfPoise {
         poise: i32
     }
 }
@@ -19,7 +22,8 @@ impl<'a> System<'a> for EffectsSystem {
         WriteStorage<'a, EffectRequest>,
         WriteStorage<'a, Awestruck>,
         ReadStorage<'a, InFaction>,
-        ReadStorage<'a, Viewshed>
+        ReadStorage<'a, Viewshed>,
+        WriteStorage<'a, Poise>
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -29,12 +33,13 @@ impl<'a> System<'a> for EffectsSystem {
             mut requests,
             mut awestruckness,
             factions,
-            viewsheds
+            viewsheds,
+            mut poises
         ) = data;
 
         for (entity, pos, request) in (&entities, &positions, &requests).join() {
             match &request.effect {
-                Effect::AWESOMENESS { poise } => {
+                Effect::Awesomeness { poise } => {
                     let mut targets = Vec::new();
                     let pos_point = Point::new(pos.x, pos.y);
                     for (vs_entity, viewshed) in (&entities, &viewsheds).join() {
@@ -61,6 +66,11 @@ impl<'a> System<'a> for EffectsSystem {
                                 reason: full_reason.to_string()
                             }).expect("Unable to insert awestruckness.");
                         }
+                    }
+                }
+                Effect::SelfPoise { poise } => {
+                    if let Some(mut self_poise) = poises.get_mut(entity) {
+                        self_poise.poise = i32::min(self_poise.max_poise, self_poise.poise + poise);
                     }
                 }
             }
