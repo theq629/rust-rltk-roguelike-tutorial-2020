@@ -25,7 +25,7 @@ use state::{Turn};
 mod text;
 mod factions;
 mod cellinfo;
-mod lose_conditions;
+mod win_lose_conditions;
 
 #[derive(PartialEq, Clone)]
 pub enum RunState {
@@ -43,7 +43,7 @@ pub enum RunState {
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
     NextLevel,
-    GameOver { reason: String }
+    GameOver { won: bool, reason: String }
 }
 
 impl state::State {
@@ -232,8 +232,8 @@ impl GameState for state::State {
                 }
                 newrunstate = RunState::PreRun;
             },
-            RunState::GameOver { reason } => {
-                let result = gui::game_over(&reason.to_string(), ctx);
+            RunState::GameOver { won, reason } => {
+                let result = gui::game_over(*won, &reason.to_string(), ctx);
                 match result {
                     gui::GameOverResult::NoSelection => {}
                     gui::GameOverResult::QuitToMenu => {
@@ -249,7 +249,7 @@ impl GameState for state::State {
             *runwriter = newrunstate.clone();
         }
 
-        lose_conditions::check_lose(&mut self.ecs);
+        win_lose_conditions::check_lose(&mut self.ecs);
         delete_the_dead(&mut self.ecs);
     }
 }

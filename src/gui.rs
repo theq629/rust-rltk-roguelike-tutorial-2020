@@ -365,16 +365,20 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
 #[derive(PartialEq, Copy, Clone)]
 pub enum GameOverResult { NoSelection, QuitToMenu }
 
-pub fn game_over(message: &String, ctx: &mut Rltk) -> GameOverResult {
+pub fn game_over(won: bool, message: &String, ctx: &mut Rltk) -> GameOverResult {
     let (screen_width, screen_height) = ctx.get_char_size();
 
     let title_fg = RGB::from_u8(255, 255, 255);
     let message_fg = RGB::from_u8(192, 192, 192);
-    let bg = RGB::from_u8(96, 64, 64);
+    let won_bg = RGB::from_u8(64, 64, 96);
+    let lost_bg = RGB::from_u8(96, 64, 64);
+
+    let won_lost_msg = if won { "won" } else { "lost" };
+    let bg = if won { won_bg } else { lost_bg };
 
     let y = (screen_height - 8) / 2 - 3;
     ctx.fill_region(Rect::with_size(0, y - 1, screen_width, 6), rltk::to_cp437(' '), title_fg, bg);
-    ctx.print_color_centered(y, title_fg, bg, "You lost!");
+    ctx.print_color_centered(y, title_fg, bg, format!("You {}!", won_lost_msg));
     ctx.print_color_centered(y + 2, message_fg, bg, message);
     ctx.print_color_centered(y + 4, title_fg, bg, "Press escape to return to the menu.");
 
