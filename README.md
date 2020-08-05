@@ -1,4 +1,4 @@
-# Rust RLTK roguelike tutorial roguelike 2020
+# Lunar dance war with vampires
 
 For Roguelikedev Does The Complete Roguelike Tutorial 2020, following http://bfnightly.bracketproductions.com/rustbook.
 
