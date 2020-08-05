@@ -61,54 +61,93 @@ fn floor_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
                 (Stuff::OilBalloon, 0, 1),
                 (Stuff::Coffee, 1, 2),
                 (Stuff::StrongCoffee, 0, 1),
-                (Stuff::HealthKit, 2, 3),
+                (Stuff::HealthKit, 1, 2),
                 (Stuff::Firecracker, 2, 3),
                 (Stuff::Flashbang, 1, 2),
                 (Stuff::Knife, 1, 2),
                 (Stuff::LightArmour, 1, 2),
             ],
-        _ =>
+        2 =>
             vec![
-                (Stuff::Rabbit, 1, 5),
-                (Stuff::BigRabbit, 1, 5),
-                (Stuff::Thrall, 1, 5),
-                (Stuff::ToughThrall, 1, 5),
-                (Stuff::Vampire, 1, 5),
-                (Stuff::OldVampire, 1, 1),
-                (Stuff::Dart, 1, 1),
-                (Stuff::StunDart, 1, 1),
+                (Stuff::Rabbit, 5, 10),
+                (Stuff::BigRabbit, 5, 10),
+                (Stuff::Thrall, 10, 20),
+                (Stuff::ToughThrall, 5, 10),
+                (Stuff::StunDart, 1, 2),
                 (Stuff::LongStunDart, 1, 1),
-                (Stuff::Grenade, 1, 1),
-                (Stuff::WaterDart, 2, 3),
+                (Stuff::Dart, 1, 1),
+                (Stuff::WaterDart, 1, 3),
                 (Stuff::WaterBalloon, 1, 2),
                 (Stuff::OilDart, 2, 3),
                 (Stuff::OilBalloon, 1, 2),
-                (Stuff::BloodDart, 2, 3),
-                (Stuff::BloodBalloon, 1, 2),
-                (Stuff::HealthKit, 2, 3),
-                (Stuff::SuperHealthKit, 2, 3),
-                (Stuff::Coffee, 2, 3),
-                (Stuff::StrongCoffee, 2, 3),
+                (Stuff::BloodDart, 0, 1),
+                (Stuff::BloodBalloon, 0, 1),
+                (Stuff::Grenade, 0, 1),
+                (Stuff::Coffee, 1, 2),
+                (Stuff::StrongCoffee, 0, 1),
+                (Stuff::HealthKit, 1, 2),
+                (Stuff::SuperHealthKit, 0, 1),
                 (Stuff::Firecracker, 2, 3),
                 (Stuff::Flashbang, 1, 2),
-                (Stuff::Knife, 1, 2),
                 (Stuff::Sword, 1, 2),
-                (Stuff::ElectroSword, 1, 2),
-                (Stuff::SuperSword, 1, 2),
-                (Stuff::LightArmour, 1, 2),
                 (Stuff::MediumArmour, 1, 2),
+                (Stuff::Shield, 0, 1),
+            ],
+        3 =>
+            vec![
+                (Stuff::Rabbit, 1, 3),
+                (Stuff::BigRabbit, 1, 3),
+                (Stuff::Thrall, 5, 10),
+                (Stuff::ToughThrall, 2, 5),
+                (Stuff::Vampire, 10, 20),
+                (Stuff::OldVampire, 5, 10),
+                (Stuff::StunDart, 1, 2),
+                (Stuff::LongStunDart, 1, 2),
+                (Stuff::Dart, 1, 1),
+                (Stuff::WaterDart, 1, 3),
+                (Stuff::WaterBalloon, 1, 2),
+                (Stuff::OilDart, 1, 3),
+                (Stuff::OilBalloon, 1, 2),
+                (Stuff::BloodDart, 2, 3),
+                (Stuff::BloodBalloon, 1, 2),
+                (Stuff::Grenade, 1, 1),
+                (Stuff::Coffee, 1, 2),
+                (Stuff::StrongCoffee, 1, 2),
+                (Stuff::HealthKit, 1, 2),
+                (Stuff::SuperHealthKit, 1, 2),
+                (Stuff::Firecracker, 2, 3),
+                (Stuff::Flashbang, 1, 2),
+                (Stuff::ElectroSword, 1, 2),
                 (Stuff::HeavyArmour, 1, 2),
                 (Stuff::Shield, 1, 2),
+                (Stuff::SuperSword, 0, 1),
+            ],
+        _ =>
+            vec![
             ],
     }
 }
 
-fn start_room_table(_map_depth: i32) -> Vec<(Stuff, i32, i32)> {
-    vec![
-        (Stuff::WaterDart, 1, 1),
-        (Stuff::WaterBalloon, 1, 1),
-        (Stuff::Knife, 1, 1),
-        (Stuff::Firecracker, 1, 1),
-        (Stuff::Coffee, 1, 1),
-    ]
+fn start_room_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
+    match map_depth {
+        1 =>
+            vec![
+                (Stuff::WaterDart, 1, 1),
+                (Stuff::WaterBalloon, 1, 1),
+                (Stuff::Knife, 1, 1),
+                (Stuff::Firecracker, 1, 1),
+                (Stuff::Coffee, 1, 1),
+            ],
+        2 =>
+            vec![
+                (Stuff::Coffee, 1, 1),
+            ],
+        3 =>
+            vec![
+                (Stuff::Coffee, 1, 1),
+            ],
+        _ =>
+            vec![
+            ],
+    }
 }
