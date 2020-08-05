@@ -71,8 +71,6 @@ impl GameState for state::State {
 
         match &newrunstate {
             RunState::PreRun => {
-                self.reset_world();
-                self.setup_world();
                 self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
@@ -205,8 +203,13 @@ impl GameState for state::State {
                     gui::MainMenuResult::NoSelection{ selected } => newrunstate = RunState::MainMenu{ menu_selection: selected },
                     gui::MainMenuResult::Selected{ selected } => {
                         match selected {
-                            gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::NewGame => {
+                                self.reset_world();
+                                self.setup_world();
+                                newrunstate = RunState::PreRun;
+                            }
                             gui::MainMenuSelection::LoadGame => {
+                                self.reset_world();
                                 saveload_system::load_game(&mut self.ecs);
                                 newrunstate = RunState::AwaitingInput;
                                 saveload_system::delete_save();
@@ -222,6 +225,11 @@ impl GameState for state::State {
             },
             RunState::NextLevel => {
                 self.goto_next_level();
+                {
+                    let map = self.ecs.read_resource::<Map>();
+                    let mut player_log = self.ecs.write_resource::<gamelog::PlayerLog>();
+                    player_log.insert(&format!("You go down stairs to floor {}.", map.depth));
+                }
                 newrunstate = RunState::PreRun;
             },
             RunState::GameOver { reason } => {

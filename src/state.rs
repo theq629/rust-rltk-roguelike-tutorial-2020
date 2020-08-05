@@ -103,14 +103,6 @@ impl State {
         if let Some(vs) = vs {
             vs.dirty = true;
         }
-
-        let mut player_log = self.ecs.fetch_mut::<gamelog::PlayerLog>();
-        player_log.insert(&"You descend to the next level, and take a moment to heal.");
-        let mut player_health_store = self.ecs.write_storage::<Health>();
-        let player_health = player_health_store.get_mut(*player_entity);
-        if let Some(player_health) = player_health {
-            player_health.health = i32::max(player_health.health, player_health.max_health / 2);
-        }
     }
 
     pub fn game_over_cleanup(&mut self) {
