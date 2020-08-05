@@ -314,13 +314,16 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
 
         let mut y = items_y;
 
-        let mut fg = continue_game_fg;
-        if !save_exists {
-            fg = fg.to_greyscale();
+        #[cfg(not(target_arch="wasm32"))]
+        {
+            let mut fg = continue_game_fg;
+            if !save_exists {
+                fg = fg.to_greyscale();
+            }
+            let bg = if selection == MainMenuSelection::LoadGame { sel_bg } else { unsel_bg };
+            ctx.print_color_centered(y, fg, bg, "Continue Game");
+            y += 1;
         }
-        let bg = if selection == MainMenuSelection::LoadGame { sel_bg } else { unsel_bg };
-        ctx.print_color_centered(y, fg, bg, "Continue Game");
-        y += 1;
 
         let bg = if selection == MainMenuSelection::NewGame { sel_bg } else { unsel_bg };
         ctx.print_color_centered(y, new_game_fg, bg, "New Game");
