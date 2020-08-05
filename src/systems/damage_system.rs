@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use rltk::{Point};
-use crate::{Health, SufferDamage, Player, Name, gamelog::GameLog, text::capitalize, RunState, Position, Map, liquids::Liquid, Stamina};
+use crate::{Health, SufferDamage, Name, gamelog::GameLog, text::capitalize, Position, Map, liquids::Liquid, Stamina};
 
 pub struct DamageSystem {}
 
@@ -32,28 +32,18 @@ pub fn delete_the_dead(ecs: &mut World) {
     let mut dead: Vec<Entity> = Vec::new();
     {
         let health = ecs.read_storage::<Health>();
-        let players = ecs.read_storage::<Player>();
         let names = ecs.read_storage::<Name>();
         let positions = ecs.read_storage::<Position>();
         let entities = ecs.entities();
         let mut gamelog = ecs.write_resource::<GameLog>();
         for (entity, health) in (&entities, &health).join() {
             if health.health < 1 {
-                let player = players.get(entity);
-                match player {
-                    None => {
-                        if let Some(victim_name) = names.get(entity) {
-                            if let Some(pos) = positions.get(entity) {
-                                gamelog.at(Point::new(pos.x, pos.y), &format!("{} {} dead", capitalize(&victim_name.np), victim_name.verb("is", "are")));
-                            }
-                        }
-                        dead.push(entity)
-                    }
-                    Some(_) => {
-                        let mut runstate = ecs.write_resource::<RunState>();
-                        *runstate = RunState::GameOver;
+                if let Some(victim_name) = names.get(entity) {
+                    if let Some(pos) = positions.get(entity) {
+                        gamelog.at(Point::new(pos.x, pos.y), &format!("{} {} dead", capitalize(&victim_name.np), victim_name.verb("is", "are")));
                     }
                 }
+                dead.push(entity)
             }
         }
     }

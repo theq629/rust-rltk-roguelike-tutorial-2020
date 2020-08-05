@@ -25,8 +25,9 @@ use state::{Turn};
 mod text;
 mod factions;
 mod cellinfo;
+mod lose_conditions;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Clone)]
 pub enum RunState {
     AwaitingInput,
     PreRun,
@@ -42,7 +43,7 @@ pub enum RunState {
     MainMenu { menu_selection: gui::MainMenuSelection },
     SaveGame,
     NextLevel,
-    GameOver
+    GameOver { reason: String }
 }
 
 impl state::State {
@@ -60,7 +61,7 @@ impl GameState for state::State {
         let mut newrunstate;
         {
             let runstate = self.ecs.fetch::<RunState>();
-            newrunstate = *runstate;
+            newrunstate = (*runstate).clone();
         }
 
         match newrunstate {
@@ -68,7 +69,7 @@ impl GameState for state::State {
             _ => { self.draw_world(ctx); }
         }
 
-        match newrunstate {
+        match &newrunstate {
             RunState::PreRun => {
                 self.reset_world();
                 self.setup_world();
@@ -138,13 +139,13 @@ impl GameState for state::State {
                 }
             }
             RunState::ShowTargeting{range, item} => {
-                let result = gui::ranged_target(self, ctx, range);
+                let result = gui::ranged_target(self, ctx, *range);
                 match result.0 {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
                         let mut intent = self.ecs.write_storage::<WantsToUseItem>();
-                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item, target: result.1 }).expect("Unable to insert intent");
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: *item, target: result.1 }).expect("Unable to insert intent");
                         newrunstate = RunState::PlayerTurn;
                     }
                 }
@@ -223,8 +224,8 @@ impl GameState for state::State {
                 self.goto_next_level();
                 newrunstate = RunState::PreRun;
             },
-            RunState::GameOver => {
-                let result = gui::game_over(ctx);
+            RunState::GameOver { reason } => {
+                let result = gui::game_over(&reason.to_string(), ctx);
                 match result {
                     gui::GameOverResult::NoSelection => {}
                     gui::GameOverResult::QuitToMenu => {
@@ -237,9 +238,10 @@ impl GameState for state::State {
 
         {
             let mut runwriter = self.ecs.write_resource::<RunState>();
-            *runwriter = newrunstate;
+            *runwriter = newrunstate.clone();
         }
 
+        lose_conditions::check_lose(&mut self.ecs);
         delete_the_dead(&mut self.ecs);
     }
 }
