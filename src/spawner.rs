@@ -59,6 +59,8 @@ fn floor_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
                 (Stuff::WaterBalloon, 1, 2),
                 (Stuff::OilDart, 0, 1),
                 (Stuff::OilBalloon, 0, 1),
+                (Stuff::Coffee, 1, 2),
+                (Stuff::StrongCoffee, 0, 1),
                 (Stuff::HealthKit, 2, 3),
                 (Stuff::Firecracker, 2, 3),
                 (Stuff::Flashbang, 1, 2),
@@ -85,6 +87,8 @@ fn floor_table(map_depth: i32) -> Vec<(Stuff, i32, i32)> {
                 (Stuff::BloodBalloon, 1, 2),
                 (Stuff::HealthKit, 2, 3),
                 (Stuff::SuperHealthKit, 2, 3),
+                (Stuff::Coffee, 2, 3),
+                (Stuff::StrongCoffee, 2, 3),
                 (Stuff::Firecracker, 2, 3),
                 (Stuff::Flashbang, 1, 2),
                 (Stuff::Knife, 1, 2),
@@ -105,5 +109,6 @@ fn start_room_table(_map_depth: i32) -> Vec<(Stuff, i32, i32)> {
         (Stuff::WaterBalloon, 1, 1),
         (Stuff::Knife, 1, 1),
         (Stuff::Firecracker, 1, 1),
+        (Stuff::Coffee, 1, 1),
     ]
 }

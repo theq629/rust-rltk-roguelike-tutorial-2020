@@ -38,6 +38,8 @@ construct_dispatcher!(
         with (ItemUseSystem, "item_use", &[])
         with (EquipSystem, "equip", &["item_use"])
         with (DoHealingSystem, "do_healing", &["item_use"])
+        with (DoAddStaminaSystem, "do_add_stamina", &["item_use"])
+        with (DoAddPoiseSystem, "do_add_poise", &["item_use"])
         with (DoDamageSystem, "do_damage", &["item_use"])
         with (CauseConfusionSystem, "cause_confision", &["item_use"])
         with (MakeNoiseSystem, "make_noise", &["item_use"])

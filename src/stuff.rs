@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, MarkedBuilder};
 use rltk::{RGB};
-use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, CausesConfusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina, MakesNoise};
+use super::{SerializeMe, CombatStats, Health, Player, Renderable, Name, Position, Viewshed, Monster, MonsterAI, BlocksTile, Item, ProvidesHealing, Consumable, Ranged, InflictsDamage, AreaOfEffect, CausesConfusion, EquipmentSlot, Equippable, MeleePowerBonus, DefenceBonus, CanDoDances, dancing::Dance, Poise, liquids::Liquid, SpreadsLiquid, InFaction, factions::Faction, Stamina, MakesNoise, ProvidesStamina};
 
 #[derive(Clone, PartialEq)]
 pub enum Stuff {
@@ -19,6 +19,8 @@ pub enum Stuff {
     OilBalloon,
     HealthKit,
     SuperHealthKit,
+    Coffee,
+    StrongCoffee,
     Grenade,
     StunDart,
     LongStunDart,
@@ -52,6 +54,8 @@ impl Stuff {
             Stuff::OilBalloon => oil_balloon(ecs, x, y),
             Stuff::HealthKit => health_kit(ecs, x, y),
             Stuff::SuperHealthKit => super_health_kit(ecs, x, y),
+            Stuff::Coffee => coffee(ecs, x, y),
+            Stuff::StrongCoffee => strong_coffee(ecs, x, y),
             Stuff::Grenade => grenade(ecs, x, y),
             Stuff::StunDart => stun_dart(ecs, x, y),
             Stuff::LongStunDart => long_stun_dart(ecs, x, y),
@@ -392,6 +396,38 @@ pub fn super_health_kit(ecs: &mut World, x: i32, y: i32) {
         .with(Item{})
         .with(Consumable{})
         .with(ProvidesHealing{ heal_amount: 16 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn coffee(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('!'),
+            fg: RGB::named(rltk::GREY),
+            render_order: 3
+        })
+        .with(Name::new_regular("coffee"))
+        .with(Item{})
+        .with(Consumable{})
+        .with(ProvidesStamina{ stamina: 5 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+pub fn strong_coffee(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('!'),
+            fg: RGB::named(rltk::WHITE),
+            render_order: 3
+        })
+        .with(Name::new_regular("strong coffee"))
+        .with(Item{})
+        .with(Consumable{})
+        .with(ProvidesStamina{ stamina: 10 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

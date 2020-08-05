@@ -361,6 +361,16 @@ pub struct ItemUseInProgress {
     pub targets: Vec<Entity>
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct ProvidesStamina {
+    pub stamina: i32
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct ProvidesPoise {
+    pub poise: i32
+}
+
 pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Position>();
     ecs.register::<Renderable>();
@@ -411,5 +421,7 @@ pub fn setup_ecs(ecs: &mut World) {
     ecs.register::<Noise>();
     ecs.register::<MakesNoise>();
     ecs.register::<ItemUseInProgress>();
+    ecs.register::<ProvidesStamina>();
+    ecs.register::<ProvidesPoise>();
     ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 }

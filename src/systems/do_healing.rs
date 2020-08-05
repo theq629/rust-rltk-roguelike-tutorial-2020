@@ -34,4 +34,3 @@ impl<'a> System<'a> for DoHealingSystem {
         }
     }
 }
-
